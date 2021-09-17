@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="UTF-16"?>
+<uP7preProcessor>
+    <Options>
+        <!-- 
+          Parameters:
+            - Name: project name, will be used to generate description file <ProjectName>.up7
+            - Bits:  parameter dedicated to specify target CPU architecture, it has next possible values:
+              * x64 - if target CPU is 64 bits
+              * x32 - if target CPU is 32 bits
+            - wchar_t: size in bits of wchar_t type, allowed values 16 & 32
+            - IDsHeader: boolean flag (true/false)
+              * true - generate additional header whith telemetry & module IDs
+              * false - skip IDs header generation
+        -->
+        <Project Name="uP7test" Bits="x64" wchar_t="16" IDsHeader="true" />
+        <Process>
+            <Pattern Mask="*.cpp" />
+            <Pattern Mask="*.h" />
+            <Pattern Mask="*.hpp" />
+        </Process>
+        <Functions>
+            <Trace Name="uP7TRC" IdIndex="0" FormatStrIndex="2" />
+            <Trace Name="uP7DBG" IdIndex="0" FormatStrIndex="2" />
+            <Trace Name="uP7INF" IdIndex="0" FormatStrIndex="2" />
+            <Trace Name="uP7WRN" IdIndex="0" FormatStrIndex="2" />
+            <Trace Name="uP7ERR" IdIndex="0" FormatStrIndex="2" />
+            <Trace Name="uP7CRT" IdIndex="0" FormatStrIndex="2" />
+            <RegisterModule Name="uP7TrcRegisterModule" NameIndex="0" LevelIndex="1" />
+            <CreateCounter Name="uP7TelCreateCounter" NameIndex="0" MinIndex="1" AlarmMinIndex="2" MaxIndex="3" AlarmMaxIndex="4" OnIndex="5" />
+        </Functions>
+        <!-- Descriptors allows to register trace modules and telemetry counter in preprocessor XML instead of source code.
+             Descriptors has 2 possible sub-items:
+              * Module - uP7 module description. To use it in your code please call function uP7TrcFindModule
+                It has next parameters:
+                 * Name - module name
+                 * Verbosity - module default verbosity, please use one of next values:
+                   - euP7Level_Trace  
+                   - euP7Level_Debug  
+                   - euP7Level_Info   
+                   - euP7Level_Warning 
+                   - euP7Level_Error   
+                   - euP7Level_Critical
+              * Counter - uP7 telemetry counter description. To use it in your code please call function uP7TelFindCounter
+                It has next parameters:
+                 * Min - min counter value
+                 * AlarmMin - value below that will be interpreted by Baical as alarm
+                 * Max - max counter value
+                 * AlarmMax - value above that will be interpreted by Baical as alarm
+                 * Enabled - default counter state, next values are accepted: 
+                   - true
+                   - false
+        <Descriptors>
+            <Module Name="Example Module #1" Verbosity="euP7Level_Trace" />
+            <Module Name="Example Module #2" Verbosity="euP7Level_Debug" />
+            <Counter Name="Example telemetry #1" Min="0" AlarmMin="0" Max="100" AlarmMax="99" Enabled="true" />
+        </Descriptors>
+        -->
+        <ReadOnlyFiles>
+            <File RelativePath="/common.h" />
+            <File RelativePath="/main.cpp" />
+        </ReadOnlyFiles>
+        <ExcludedFiles>
+            <!-- If some files has to be excluded by preprocessor - put it here 
+                 File masks like *.cpp aren't supported!
+            -->
+            <!--<File RelativePath="folder1/folder2/myfile.cpp" />-->
+        </ExcludedFiles>
+    </Options>
+    <Files>
+        <File RelativePath="/t1CreateDestroy.cpp" Hash="267B32FA662DB723688FD8B044E9ED6BB935702A98B5A38E6354B85BEA1A6F08" />
+        <File RelativePath="/t1CreateDestroy.h" Hash="B9053FC442CC8FB5A140F665B5B8652D584E9F60D2C368E02EB960F7679EFA7C" />
+        <File RelativePath="/t2Format.cpp" Hash="7004ABA9AF9BE50299A48C441A7237A63855D15F20B96E363ED0111DDA8650DD" />
+        <File RelativePath="/t2Format.h" Hash="78EF9344C6249666D781A66DFDA7BA88AC5D904044C74030314381EF04CE9456" />
+        <File RelativePath="/t3Performance.cpp" Hash="E025B4991F7C8394E8262E71FBFC0CAF0452F01EF985A04CB74A31448AA36F1C" />
+        <File RelativePath="/t3Performance.h" Hash="3182EBF40AC65D54709ADC747C51730CFD088979A5F29947461256FC44E3EE36" />
+        <File RelativePath="/t4MultiCore.cpp" Hash="02EF488263DD50E82F9294F03D5F6C01887468B1607FEE4EB645D3D813552C2C" />
+        <File RelativePath="/t4MultiCore.h" Hash="B32C6BDF82C7325803D9124DD893D49C04E34A8C3F0973AAE216A0232939DA54" />
+        <File RelativePath="/t5Time.cpp" Hash="55B81EA8507564C00342445E0461501E7D718FC15A3F68B2454EEC5136458D67" />
+        <File RelativePath="/t5Time.h" Hash="B097F32DE3D91393954261A43A05B9183346325101DE197C3E6549B97E857AC5" />
+        <File RelativePath="/t6Resync.cpp" Hash="BA81ADF43D10BDF078ADD9DF569E44365D90F5CF363EBEA9F387027DFE290985" />
+        <File RelativePath="/t6Resync.h" Hash="34C54618E17C5D4D3F7C50B63CA15D341F7C75C7758EDAB780DC695F5FA461EC" />
+        <File RelativePath="/uP7preProcessor/uP7IDs.h" Hash="6AE0B31B0D2EEDDC7F157F2C977F22D708A4E9F4E2DEA836D5F7994EB2F73569" />
+    </Files>
+</uP7preProcessor>
