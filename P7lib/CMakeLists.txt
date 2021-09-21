@@ -38,7 +38,7 @@ if(MSVC)
             string(LENGTH ${CMAKE_CURRENT_SOURCE_DIR} CURRENT_SOURCE_DIR_LEN)
             MATH(EXPR ROOT_P7_PATH_LEN "${ROOT_P7_PATH_LEN}+1")
             MATH(EXPR CURRENT_SOURCE_DIR_LEN "${CURRENT_SOURCE_DIR_LEN} - ${ROOT_P7_PATH_LEN}")
-            
+
             string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${ROOT_P7_PATH_LEN} ${CURRENT_SOURCE_DIR_LEN} IDE_SUBFOLDER)
             set_property(TARGET ${_project_name} PROPERTY FOLDER ${IDE_SUBFOLDER})
         endmacro()
@@ -55,7 +55,7 @@ else()
     enable_cxx_compiler_flag_if_supported("-Wno-missing-field-initializers")
     enable_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
     enable_cxx_compiler_flag_if_supported("-fPIC")
-    
+
     macro(set_ide_folder _project_name)
     endmacro()
 endif()
@@ -73,3 +73,8 @@ if(P7_EXAMPLES_BUILD)
     add_subdirectory(Examples)
 endif()
 
+##########################
+#         Addons         #
+##########################
+option(SINGLETON_SHARED_LIB " Singleton shared lib" ON)
+add_subdirectory(Singleton)
