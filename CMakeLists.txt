@@ -66,6 +66,7 @@ else()
     SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/_Build_)
 endif()
 
+set(PRE_PROCESSOR ${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/P7preProcessor)
 if (TARGET p7)
     #message("P7 target is already existing, scipping local one")
 else()

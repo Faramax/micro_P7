@@ -26,7 +26,7 @@ add_executable(${PROJECT_NAME}
 
 add_custom_command(TARGET ${PROJECT_NAME}
                    PRE_BUILD
-                   COMMAND uP7preProcessor "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/uP7Testx86.xml" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor"
+                   COMMAND ${PRE_PROCESSOR} "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/uP7Testx86.xml" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor"
                   )
 
 target_link_libraries (${PROJECT_NAME} uP7proxy p7 uP7)
