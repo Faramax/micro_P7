@@ -39,7 +39,7 @@
  *  candidate for telemetry sample. 
  *  If floating point isn't supported or int32_t is enough for telemetry needs - int32_t may be used, etc.
 */
-#define UP7_PRECISE_TYPE_INDEX 0
+#define UP7_PRECISE_TYPE_INDEX 1
 
 
 #if   UP7_PRECISE_TYPE_INDEX == 0
