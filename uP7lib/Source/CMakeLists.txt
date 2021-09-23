@@ -18,6 +18,7 @@ add_library(uP7 STATIC
             uP7.c)
 
 set_property(TARGET uP7 PROPERTY POSITION_INDEPENDENT_CODE ON)
+target_include_directories(uP7 PUBLIC ${PATH_UP7_PLATFORM})
 
 set_ide_folder(${PROJECT_NAME})
 
