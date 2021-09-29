@@ -32,6 +32,7 @@ endif()
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../Headers/")
+target_include_directories(${PROJECT_NAME} PUBLIC ".")
 if(P7_BUILD_SHARED)
     target_include_directories(${PROJECT_NAME}-shared PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../Headers/")
 endif()
