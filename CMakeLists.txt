@@ -13,7 +13,7 @@ function(enable_cxx_compiler_flag_if_supported flag)
             set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}" PARENT_SCOPE)
         endif()
     endif()
-    
+
     string(FIND "${CMAKE_C_FLAGS}" "${flag}" flag_already_set)
     if(flag_already_set EQUAL -1)
         check_c_compiler_flag("${flag}" flag_supported)
@@ -54,7 +54,7 @@ else()
     enable_cxx_compiler_flag_if_supported("-Wno-long-long")
     enable_cxx_compiler_flag_if_supported("-Wno-missing-field-initializers")
     enable_cxx_compiler_flag_if_supported("-Wno-unknown-pragmas")
-    
+
     macro(set_ide_folder _project_name)
     endmacro()
 endif()
@@ -82,3 +82,4 @@ if(NOT MCU)
 endif()
 
 add_subdirectory(uP7lib)
+set_target_properties(uP7 PROPERTIES PRE_PROCESSOR ${PRE_PROCESSOR})
