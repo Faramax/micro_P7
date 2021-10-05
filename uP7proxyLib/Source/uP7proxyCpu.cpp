@@ -421,6 +421,7 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
                 }
                 else
                 {
+                    uWARNING(TM("[CPU#%d] Unrecognized session ID: %I32u, Expected: %I32u"), (int)m_bId, l_uPacketSId, l_uSessionId);
                     ReleaseStreamsPackets();
                     l_bResult = false;
                     break;
