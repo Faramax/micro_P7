@@ -176,7 +176,46 @@ public:
 
     }// Enumerate_Files
 
-	
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Enumerate_Dir_Group
+    // Split the directories group separated by ";" and enumerate files in them.
+    static void Enumerate_Dir_Group(CBList<CWString*> *i_pDll_List,
+                                    CWString          *i_pGroup,
+                                    const char        *i_pMask, //for example L"*.so"
+                                    tUINT32            i_dwDepth = 0xFFFFFFul)
+    {
+       if (    (NULL == i_pDll_List)
+            || (NULL == i_pGroup)
+            || (NULL == i_pMask)
+          )
+       {
+           return;
+       }
+
+
+       tXCHAR* l_pGroupRawBegin = i_pGroup->Get();
+       tXCHAR* l_pGroupRawEnd = l_pGroupRawBegin;
+       while(true)
+       {
+           int const ZeroEnd = (0 == *l_pGroupRawEnd);
+           int const SemicolonEnd = (';' == *l_pGroupRawEnd);
+           if(ZeroEnd || SemicolonEnd)
+           {
+               CWString SubStr(l_pGroupRawBegin);
+               *l_pGroupRawEnd = 0;
+
+               Enumerate_Files(i_pDll_List, &SubStr, i_pMask, i_dwDepth);
+
+               if(ZeroEnd)
+                   return;
+
+               l_pGroupRawBegin = l_pGroupRawEnd + 1;
+           }
+           ++l_pGroupRawEnd;
+       }
+    }// Enumerate_Dir_Group
+
     ////////////////////////////////////////////////////////////////////////////
     // Enumerate_Dirs
     static void Enumerate_Dirs(CBList<CWString*> *io_pList, const tXCHAR *i_pRoot)
