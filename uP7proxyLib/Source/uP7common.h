@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-extern "C" 
+extern "C"
 {
     #define UP7_FLOATING_POINT //support floating point telemetry, needed for uP7protocol.h
     #include "uP7helpers.h"
@@ -105,6 +105,13 @@ extern "C"
 #define uWARNING(i_pFormat,  ...) if (BK_LOGGER) (BK_LOGGER)->P7_WARNING(BK_LOG_MODULE,  i_pFormat, __VA_ARGS__);
 #define uERROR(i_pFormat,    ...) if (BK_LOGGER) (BK_LOGGER)->P7_ERROR(BK_LOG_MODULE,    i_pFormat, __VA_ARGS__);
 #define uCRITICAL(i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_CRITICAL(BK_LOG_MODULE, i_pFormat, __VA_ARGS__);
+
+#define up7TRACE     (module, i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_TRACE(module,    i_pFormat, __VA_ARGS__);
+#define up7DEBUG     (module, i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_DEBUG(module,    i_pFormat, __VA_ARGS__);
+#define up7INFO      (module, i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_INFO(module,     i_pFormat, __VA_ARGS__);
+#define up7WARNING   (module, i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_WARNING(module,  i_pFormat, __VA_ARGS__);
+#define up7ERROR     (module, i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_ERROR(module,    i_pFormat, __VA_ARGS__);
+#define up7CRITICAL  (module, i_pFormat, ...) if (BK_LOGGER) (BK_LOGGER)->P7_CRITICAL(module, i_pFormat, __VA_ARGS__);
 
 #define TEL_ADD(i_bCId, i_llValue) if (BK_TELEMETRY) (BK_TELEMETRY)->Add(i_bCId, i_llValue);
 
