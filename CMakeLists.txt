@@ -74,12 +74,14 @@ if(NOT MCU)
     else()
         message(FATAL_ERROR "Can't find P7 library!")
     endif()
+endif()
 
+add_subdirectory(uP7lib)
+set_target_properties(uP7 PROPERTIES PRE_PROCESSOR ${PRE_PROCESSOR})
+
+if(NOT MCU)
     add_subdirectory(uP7proxyLib)
     add_subdirectory(uP7preProcessor)
     add_subdirectory(uP7test)
     add_subdirectory(uP7example)
 endif()
-
-add_subdirectory(uP7lib)
-set_target_properties(uP7 PROPERTIES PRE_PROCESSOR ${PRE_PROCESSOR})
