@@ -29,6 +29,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "GTypes.h"
+#include "P7_Trace.h"
 
 #define uP7_FILES_EXT TM("up7")
 
@@ -250,6 +251,8 @@ public:
      * @return new reference counter value
     */
     virtual int32_t Release() = 0;
+
+    virtual IP7_Trace*  GetTrace() = 0;
 };
 
 /**

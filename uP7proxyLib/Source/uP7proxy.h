@@ -169,6 +169,8 @@ public:
     IP7_Client     *RegisterChannel(IP7C_Channel *i_pChannel);
     void            ReleaseChannel(IP7_Client *i_pClient, uint32_t i_uID);
 
+    virtual IP7_Trace*      GetTrace() { return m_pP7Trace; }
+
 private:
     bool IsBigEndian();
 
