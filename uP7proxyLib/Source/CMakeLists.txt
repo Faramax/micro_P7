@@ -2,17 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 
 project(uP7proxy)
 
-include_directories(${PATH_UP7_API})
-include_directories(${PATH_UP7_LIB})
-include_directories(${PATH_SHARED})
-include_directories(${PATH_SHARED_PLATFORM})
-include_directories(${PATH_P7_API})
-include_directories(${PATH_UP7_PROXY_API})
-include_directories(${PATH_UP7_PLATFORM})
-
 set(PATH_UP7_PROXY_LIB ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
-add_library(uP7proxy STATIC 
+add_library(uP7proxy STATIC
             "${PATH_UP7_API}/uP7.h"
             "${PATH_UP7_API}/uP7helpers.h"
             "${PATH_UP7_API}/uP7protocol.h"
@@ -25,14 +17,24 @@ add_library(uP7proxy STATIC
             uP7chunks.h
             uP7Fifo.cpp                 uP7Fifo.h
             uP7proxy.cpp                uP7proxy.h
-            uP7proxyCpu.cpp             uP7proxyCpu.h 
+            uP7proxyCpu.cpp             uP7proxyCpu.h
             uP7proxyStream.cpp          uP7proxyStream.h
             uP7proxyTrace.cpp           uP7proxyTrace.h
             uP7proxyTelemetry.cpp       uP7proxyTelemetry.h
-           )
+)
 
-           
-set_property(TARGET uP7proxy PROPERTY POSITION_INDEPENDENT_CODE ON) 
+target_include_directories(uP7proxy
+   PUBLIC ${PATH_UP7_API}
+   PUBLIC ${PATH_UP7_LIB}
+   PUBLIC ${PATH_SHARED}
+   PUBLIC ${PATH_SHARED_PLATFORM}
+   PUBLIC ${PATH_P7_API}
+   PUBLIC ${PATH_UP7_PROXY_API}
+   PUBLIC ${PATH_UP7_PLATFORM}
+)
+
+
+set_property(TARGET uP7proxy PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 set_ide_folder(${PROJECT_NAME})
 

@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.0)
 
 project(uP7)
 
-include_directories(${PATH_UP7_API})
-include_directories(${PATH_UP7_PLATFORM})
-include_directories(${PATH_UP7_PLATFORM_INCLUDES})
-
 set(PATH_UP7_LIB ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
 add_library(uP7 STATIC
@@ -18,7 +14,10 @@ add_library(uP7 STATIC
             uP7.c)
 
 set_property(TARGET uP7 PROPERTY POSITION_INDEPENDENT_CODE ON)
-target_include_directories(uP7 PUBLIC ${PATH_UP7_PLATFORM})
+target_include_directories(uP7
+   PUBLIC ${PATH_UP7_PLATFORM}
+   PUBLIC ${PATH_UP7_API}
+   PUBLIC ${PATH_UP7_PLATFORM_INCLUDES})
 
 set_ide_folder(${PROJECT_NAME})
 
