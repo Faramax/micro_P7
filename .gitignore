@@ -30,3 +30,8 @@
 *~
 /.project
 *.orig
+
+# uP7 generated files
+uP7IDs.h
+uP7preprocessed.h
+*.up7
