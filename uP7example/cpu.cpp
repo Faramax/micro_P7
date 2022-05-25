@@ -135,7 +135,7 @@ void uP7init(stContext *pContext)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//uP7 is capable to recieve data from host and process it. This function is demonstrating such feature
+//uP7 is capable to receive data from host and process it. This function is demonstrating such feature
 //For example user can change on run-time verbosity level, enable/disable telemetry counter. 
 //Due to the memory allocation policy - uP7 DO NOT BUFFER any data inside, to avoid memory allocation/deallocation.
 //N.B. function uP7process may process not all incoming data and there will be data remainder, and this is responsability
