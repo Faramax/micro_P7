@@ -49,8 +49,8 @@ CuP7proxy::CuP7proxy(const tXCHAR *i_pArgs, const tXCHAR *i_puP7Dir, bool &o_rEr
 {
 
     m_pP7Client = P7_Create_Client(i_pArgs);
-    m_pP7Trace  = P7_Create_Trace(m_pP7Client, TM("MicroP7"));
-    m_pP7Tel    = P7_Create_Telemetry(m_pP7Client, TM("MicroP7"));
+    m_pP7Trace  = P7_Create_Trace(m_pP7Client, TM("MicroP7Proxy"));
+    m_pP7Tel    = P7_Create_Telemetry(m_pP7Client, TM("MicroP7Proxy"));
 
     if (m_pP7Trace)
     {
