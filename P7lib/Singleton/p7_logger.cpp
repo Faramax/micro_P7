@@ -104,6 +104,11 @@ void p7_logger::set_verbosity(eP7Trace_Level const& level)
    }
 }
 
+void  p7_logger::flush()
+{
+   P7_Flush();
+}
+
 p7_beam::p7_beam(tUINT16 tid)
    : m_tid(tid)
 {}
