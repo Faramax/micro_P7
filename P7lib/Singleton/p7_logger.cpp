@@ -54,6 +54,11 @@ void p7_logger::register_thread(char const* name)
    m_trace->Register_Thread(name, 0);
 }
 
+void p7_logger::unregister_thread()
+{
+   m_trace->Unregister_Thread(0);
+}
+
 IP7_Trace::hModule p7_logger::module(size_t u)
 {
    return u < m_modules.size() ? m_modules[u] : NULL;

@@ -53,6 +53,7 @@ public:
  * нумерация будет продолжена. */
    void                 register_module(const std::vector<const char*>& module_names);
    void                 register_thread(char const* name);
+   void                 unregister_thread();
 
 /*! Будьте внимательны, module_index не должен превышать размер вектора,
  * переданный при инициализации модулей. */
