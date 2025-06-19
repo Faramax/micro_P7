@@ -117,7 +117,7 @@ extern "C"
 #define TIME_SYNC_TIMEOUT_MS              1250
 #define uP7_MAINTAIN_TIME_MS              250
 #define uP7_MAINTAIN_TIME_STAT_PERIOS_MS  1000
-#define COMMAND_TIMEOUT_MS                5000
+#define COMMAND_TIMEOUT_MS                30000
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static UNUSED_FUNC uint64_t ntohqw(uint64_t i_qwX)

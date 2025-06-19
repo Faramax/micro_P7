@@ -77,6 +77,7 @@ CProxyTrace::CProxyTrace(CWString      &i_rName,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CProxyTrace::~CProxyTrace()
 {
+    On_Flush(m_uClientId, NULL);
     m_cTrcDesc.Clear(TRUE);
     m_cModDesc.Clear(TRUE);
 }

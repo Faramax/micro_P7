@@ -70,6 +70,7 @@ CProxyTelemetry::CProxyTelemetry(CWString      &i_rName,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CProxyTelemetry::~CProxyTelemetry()
 {
+    On_Flush(m_uClientId, NULL);
     m_cDesc.Clear(TRUE);
 }
 
@@ -596,7 +597,7 @@ void CProxyTelemetry::On_Flush(tUINT32 i_dwChannel, tBOOL *io_pCrash)
     if (!m_bClosed)
     {
         sP7Ext_Raw l_sHeader;
-        INIT_EXT_HEADER(l_sHeader, EP7USER_TYPE_TRACE, EP7TRACE_TYPE_CLOSE, sizeof(sP7Ext_Raw));
+        INIT_EXT_HEADER(l_sHeader, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_CLOSE, sizeof(sP7Ext_Raw));
 
         AddChunk(&l_sHeader, sizeof(sP7Ext_Raw));
         SendChunks();

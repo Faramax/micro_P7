@@ -45,6 +45,8 @@ CuP7proxy::CuP7proxy(const tXCHAR *i_pArgs, const tXCHAR *i_puP7Dir, bool &o_rEr
     , m_cClientsFull()
     , m_bProcThread(FALSE)
     , m_hProcThread(0)
+    , m_bManageThread(FALSE)
+    , m_hManageThread(0)
 {
 
     m_pP7Client = P7_Create_Client(i_pArgs);
@@ -295,6 +297,10 @@ bool CuP7proxy::RegisterCpu(uint8_t       i_bCpuId,
         }
         m_cLock.Unlock();
     }
+    else
+    {
+        uERROR(TM("RegisterCpu %s(%u) command timeout!"), i_pName, (uint32_t)i_bCpuId); 
+    }
 
     l_pFifo->Release();
     l_pFifo = NULL;
@@ -353,6 +359,11 @@ bool CuP7proxy::RegisterCpu(uint8_t       i_bCpuId,
         }
         m_cLock.Unlock();
     }
+    else
+    {
+        uERROR(TM("RegisterCpu %s(%u) command timeout!"), i_pName, (uint32_t)i_bCpuId); 
+    }
+
 
     l_pFifo->Release();
     l_pFifo = NULL;
@@ -377,6 +388,10 @@ bool CuP7proxy::UnRegisterCpu(uint8_t i_bCpuId)
         m_cLock.Lock();
         l_bReturn = l_cCmd.bResult;
         m_cLock.Unlock();
+    }
+    else
+    {
+        uERROR(TM("UnRegisterCpu %u command timeout!"), (uint32_t)i_bCpuId); 
     }
 
 

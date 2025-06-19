@@ -182,7 +182,7 @@ bool CProxyStream::SendChunks()
 {
     bool l_bReturn = true;
 
-    if (!m_pChunksHead)
+    if ((!m_pChunksHead) || (!m_pClient))
     {
         return false;
     }
