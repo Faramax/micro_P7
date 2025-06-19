@@ -262,7 +262,6 @@ void CProxyTelemetry::SetStartTime(uint64_t i_qwStartTime)
     m_qwCpuStartTime = i_qwStartTime;
 
     GetEpochTime(&m_sHeader_Info.dwTime_Hi, &m_sHeader_Info.dwTime_Lo);
-    m_qwHostProxyCreationTime = GetPerformanceCounter();
 
     if (m_iTime)
     {
@@ -445,13 +444,19 @@ size_t CProxyTelemetry::Process(const stProxyPacket *i_pPackets)
 
                 if (!m_bConvertEndianess)
                 {
-                    m_qwCpuProxyCreationTime = l_pTime->qwCpuCurrenTime;
+                    if (!m_iTime)
+                    {
+                        m_qwCpuProxyCreationTime = l_pTime->qwCpuCurrenTime;
+                    }
                     m_qwCpuStartTime         = l_pTime->qwCpuStartTime;
                     m_qwCpuFreq              = l_pTime->qwCpuFreq;
                 }
                 else
                 {
-                    m_qwCpuProxyCreationTime = ntohqw(l_pTime->qwCpuCurrenTime);
+                    if (!m_iTime)
+                    {
+                        m_qwCpuProxyCreationTime = ntohqw(l_pTime->qwCpuCurrenTime);
+                    }
                     m_qwCpuStartTime         = ntohqw(l_pTime->qwCpuStartTime);
                     m_qwCpuFreq              = ntohqw(l_pTime->qwCpuFreq);
                 }

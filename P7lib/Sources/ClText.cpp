@@ -1732,6 +1732,7 @@ void CClText::Routine()
         }
         else if (eThreadEventDataFlush == l_dwSignal)
         {
+            //HERE WE HAVE A RPOBLEM: 
             LOCK_ENTER(m_hCS);
             if (    (m_pBuffer_Current)
                  && (m_pBuffer_Current->szUsed)

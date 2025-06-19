@@ -14,7 +14,7 @@
 #include "common.h"
 #include <atomic>
 
-#define T5_DURATION_MS 10000
+#define T5_DURATION_MS 60000
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class C5TimeShift : public IuP7Time
@@ -190,7 +190,7 @@ bool     t5sendPacket(void *i_pCtx, enum euP7packetRank i_eRank, const struct st
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool t5Time(const tXCHAR *i_pSessionFolder)
 {
-    C5TimeShift*l_pTimeShift = new C5TimeShift(100);
+    C5TimeShift*l_pTimeShift = new C5TimeShift(1);
     CT5P7Sink   l_cP7Sink; 
     uint64_t    l_qwAdd = (uint64_t)(&l_cP7Sink);
     tXCHAR      l_pArgs[4096];
@@ -285,13 +285,12 @@ bool t5Time(const tXCHAR *i_pSessionFolder)
         return false;
     }
 
-    //if drift is more than 250ms
     uint64_t qwTestDuration = l_cP7Sink.GetDurationMilliseconds();
     int32_t  iDrift = (int32_t)qwTestDuration - T5_DURATION_MS;
 
     printf("t5Time: drift: %d\n", iDrift);
 
-    if (abs(iDrift) > 250)
+    if (abs(iDrift) > 6)
     {
         return false;
     }

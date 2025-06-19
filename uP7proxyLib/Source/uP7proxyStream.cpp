@@ -42,11 +42,12 @@ CProxyStream::CProxyStream(CWString      &i_rName,
     , m_cPool(uP7_POOL_DEF_CHUNK_SIZE, uP7_POOL_DEF_MAX_SIZE)
     , m_bClosed(false)
 
+    , m_qwCpuTimeDriftCalibration(0)
     , m_qwCpuProxyCreationTime(0)
     , m_qwCpuStartTime(0)
     , m_qwCpuFreq(i_qwFreq)
     
-    , m_qwHostProxyCreationTime(0)
+    , m_qwHostTimeDriftCalibration(0)
     , m_qwHostFreq(GetPerformanceFrequency())
 
     , m_llTimeCorrection(0)
@@ -67,12 +68,15 @@ CProxyStream::CProxyStream(CWString      &i_rName,
     if (m_iTime)
     {
         m_iTime->Add_Ref();
+        m_qwCpuTimeDriftCalibration  = m_iTime->GetTime();
+        m_qwHostTimeDriftCalibration = GetPerformanceCounter();
+
         m_bTimeInSync = true;
     }
 
     if (m_pP7Tel)
     {
-        m_pP7Tel->Create(TM("Time correction"), -10, -10, 10, 10, TRUE, &m_sTelTimeCorrection);
+        m_pP7Tel->Create(TM("Time correction (ms)"), -1000, -1000, 1000, 1000, TRUE, &m_sTelTimeCorrection);
     }
 }
 
@@ -125,10 +129,9 @@ bool CProxyStream::Maintain()
     {
         if (m_iTime)
         {
-            //time passed for CPU
-            uint64_t l_qwCpuDuration  = m_iTime->GetTime() - m_qwCpuStartTime; 
-            //time passed for HOST with correction of command processing time
-            uint64_t l_qwHostDuration = GetPerformanceCounter() - m_qwHostProxyCreationTime;   
+            //time passed for CPU & HOST
+            double l_dbCpuDuration  = (double)(m_iTime->GetTime() - m_qwCpuTimeDriftCalibration); 
+            double l_dbHostDuration = (double)(GetPerformanceCounter() - m_qwHostTimeDriftCalibration);   
 
             //uINFO(TM("[CPU#%d] Host duration %f, CPU Duration %f, Host roundtrip %f"), (int)m_bId ,
             //    (double)l_qwHostDuration / (double)m_qwHostFreq,
@@ -136,13 +139,20 @@ bool CProxyStream::Maintain()
             //    (double)l_qwRoundTrip / (double)m_qwHostFreq);
 
             //converting to CPU timer frequency
-            l_qwHostDuration = (uint64_t)((double)l_qwHostDuration * (double)m_qwCpuFreq / (double)m_qwHostFreq);
+            l_dbHostDuration = l_dbHostDuration * (double)m_qwCpuFreq / (double)m_qwHostFreq;
 
-            m_llTimeCorrection = (int64_t)l_qwHostDuration - (int64_t)l_qwCpuDuration;
 
-            if (    (m_llTimeCorrection < 0)
-                 && (((int64_t)l_qwCpuDuration + m_llTimeCorrection) <= 0)
-               )
+            //Expo. fitrer: y[k] =y[k-1] + A*(x[k] - y[k-1]); where A = (1-coef), coef=[0, 0.5, 0.9, 0.95, 0.98]
+            //coef=0.95 to smooth adaptation and filer out non RT fluctuations
+            m_llTimeCorrection = (int64_t)(   (double)m_llTimeCorrection 
+                                            + (1.0-0.95)*(   ((double)l_dbHostDuration - (double)l_dbCpuDuration) 
+                                                           - (double)m_llTimeCorrection
+                                                         )
+                                          );
+            
+
+            if (((int64_t)l_dbCpuDuration + m_llTimeCorrection) <= 0)
+               
             {
                 uERROR(TM("[CPU#%d] Time correction is wrong!"), (int)m_bId);
                 m_llTimeCorrection = 0;
@@ -152,7 +162,7 @@ bool CProxyStream::Maintain()
                  && (P7TELEMETRY_INVALID_ID_V2 != m_sTelTimeCorrection)
                 )
             {
-                m_pP7Tel->Add(m_sTelTimeCorrection, (double)m_llTimeCorrection/(double)m_qwCpuFreq);
+                m_pP7Tel->Add(m_sTelTimeCorrection, ((double)m_llTimeCorrection * 1000.0)/(double)m_qwCpuFreq);
             }
         }
     }
