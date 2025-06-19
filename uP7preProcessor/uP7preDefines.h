@@ -28,6 +28,8 @@ enum eErrorCodes
     eErrorTraceFormat            ,
     eErrorMemAlloc               ,
     eErrorTraceIdOverFlow        ,
+    eErrorModuleIdOverFlow       ,
+    eErrorTelIdOverFlow          ,
     eErrorTraceIdDuplicate       ,
     eErrorFileWrite              ,
     eErrorNameDuplicated         ,
@@ -144,9 +146,11 @@ enum eErrorCodes
 #define XML_NARG_OPTIONS_FUNC_TRACE_ID              TM("IdIndex")
 #define XML_NARG_OPTIONS_FUNC_TRACE_FORMAT          TM("FormatStrIndex")
 #define XML_NODE_OPTIONS_FUNC_REGMOD              TM("RegisterModule")
+#define XML_NODE_OPTIONS_FUNC_REGMODS             TM("RegisterModules")
 #define XML_NARG_OPTIONS_FUNC_REGMOD_NAME           TM("NameIndex")
 #define XML_NARG_OPTIONS_FUNC_REGMOD_LEVEL          TM("LevelIndex")
 #define XML_NODE_OPTIONS_FUNC_MKCOUNTER           TM("CreateCounter")
+#define XML_NODE_OPTIONS_FUNC_MKCOUNTERS          TM("CreateCounters")
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_NAME        TM("NameIndex")
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_MIN         TM("MinIndex")
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_AMIN        TM("AlarmMinIndex")

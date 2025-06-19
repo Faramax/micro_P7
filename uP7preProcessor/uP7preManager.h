@@ -59,6 +59,7 @@ public:
     CpreManager();
     virtual ~CpreManager();
     CFunctionsList& GetFunctions() {return m_cFunctions;}
+    stFuncDesc     *GetFuncDesc(stFuncDesc::eType i_eType);
     void            AddSourcesDir(const tXCHAR *i_pDir);
     void            SetOutputDir(const tXCHAR *i_pDir);
     void            SetName(const tXCHAR *i_pName);

@@ -10,11 +10,6 @@
 // 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#ifndef uP7_VERSION_H
-#define uP7_VERSION_H
-//-----------------------------------------
-#define uP7_VERSION 0x00020007
-#define uP7_VERSION_MAJOR 2
-#define uP7_VERSION_MINOR 7
-//-----------------------------------------
-#endif //uP7_VERSION_H
+#pragma once
+
+bool t7Pattern(const tXCHAR *i_pSessionFolder);

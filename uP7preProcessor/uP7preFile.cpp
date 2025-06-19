@@ -668,6 +668,118 @@ tBOOL CpreFile::Parse()
                             {
                                 m_cFunctions.Push_Last(new CFuncCounter(this, l_pFunc, l_pStart, l_pIt, l_iCurLine, l_pFuncionName));
                             }
+                            else if (    (stFuncDesc::eRegisterModules == l_pFunc->eFtype)
+                                      || (stFuncDesc::eCreateCounters == l_pFunc->eFtype)
+                                    )
+                            {
+                                //scanning for uniform parameters, creating base function descriptor
+                                std::unique_ptr<CFuncRoot> l_cRoot(new CFuncRoot(this, 
+                                                                                 l_pFunc, 
+                                                                                 l_pStart, 
+                                                                                 l_pIt, 
+                                                                                 l_iCurLine, 
+                                                                                 l_pFuncionName));
+
+                                std::vector<CFuncRoot::stPattern> l_cPatterns;
+                                size_t l_szMaxLen = 0;
+                                //retrieve pattern from first argument
+                                if (l_cRoot->GetPatterns((size_t)eRegModNameIndex, l_cPatterns))
+                                {
+                                    //checking scanned pattern for errors
+                                    uint64_t l_qwCombinations = 1;
+                                    for (auto& l_rIt : l_cPatterns)
+                                    {
+                                        l_rIt.uValue = l_rIt.uStart;
+                                        if (l_rIt.uStart >= l_rIt.uStop)
+                                        {
+                                            m_eError = eErrorFunctionArgs;
+                                            OSPRINT(TM("ERROR: file {%s}:%d Pattern start >= stop\n"), m_pOsPath, l_iCurLine);
+                                        }
+
+                                        l_qwCombinations *= (uint64_t)(l_rIt.uStop - l_rIt.uStart + 1);
+
+                                        if (l_rIt.cPrefix.size() > l_szMaxLen) 
+                                        {
+                                            l_szMaxLen = l_rIt.cPrefix.size(); 
+                                        }
+                                    }
+
+                                    //if (l_qwCombinations > 4096)
+                                    //{
+                                    //    m_eError = eErrorFunctionArgs;
+                                    //    OSPRINT(TM("ERROR: file {%s}:%d Pattern generates more than 4096 combinations\n"), m_pOsPath, l_iCurLine);
+                                    //}
+
+
+                                    //allocate temp buffer for sprintf + few more bytes to store digits
+                                    l_szMaxLen += 64;
+                                    std::unique_ptr<char> l_cBuffer(new char[l_szMaxLen]);
+                                    
+                                    while (eErrorNo == m_eError)
+                                    {
+                                        //generating name for new counter or module
+                                        std::string l_cName;
+                                        for (auto& l_rIt : l_cPatterns)
+                                        {
+                                            sprintf(l_cBuffer.get(), l_rIt.cPrefix.c_str(), l_rIt.uValue);
+                                            l_cName += l_cBuffer.get();
+                                        }
+
+                                        //creating final function
+                                        if (stFuncDesc::eRegisterModules == l_pFunc->eFtype)
+                                        {
+                                            l_cRoot->SetFuncDesc(m_pManager->GetFuncDesc(stFuncDesc::eRegisterModule));
+                                            m_cFunctions.Push_Last(new CFuncModule(l_cRoot.get(), l_cName.c_str()));
+                                        }
+                                        else //(stFuncDesc::eCreateCounters == l_pFunc->eFtype)
+                                        {
+                                            l_cRoot->SetFuncDesc(m_pManager->GetFuncDesc(stFuncDesc::eCreateCounter));
+                                            m_cFunctions.Push_Last(new CFuncCounter(l_cRoot.get(), l_cName.c_str()));
+                                        }
+
+
+                                        //iterate over pattern
+                                        bool l_bEnd = false;
+                                        CFuncRoot::stPattern &l_pLast = l_cPatterns.back();
+                                        l_pLast.uValue ++;
+
+                                        size_t l_szI = l_cPatterns.size();
+
+                                        while (l_szI > 0)
+                                        {
+                                            l_szI--;
+
+                                            if (l_cPatterns[l_szI].uValue > l_cPatterns[l_szI].uStop)
+                                            {
+                                                l_cPatterns[l_szI].uValue = l_cPatterns[l_szI].uStart;
+                                                if (l_szI > 0)
+                                                {
+                                                    l_cPatterns[l_szI-1].uValue++;
+                                                }
+                                                else
+                                                {
+                                                    l_bEnd = true;
+                                                    break;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                        }
+
+                                        if (l_bEnd) 
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    m_eError = eErrorFunctionArgs;
+                                    OSPRINT(TM("ERROR: file {%s}:%d Pattern parsing error!\n"), m_pOsPath, l_iCurLine);
+                                }
+                            }
                             else
                             {
                                 OSPRINT(TM("ERROR: file {%s}:%d Unknown function\n"), m_pOsPath, l_iCurLine);

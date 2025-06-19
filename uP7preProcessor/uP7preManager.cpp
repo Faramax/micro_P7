@@ -76,6 +76,23 @@ CpreManager::~CpreManager()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+stFuncDesc* CpreManager::GetFuncDesc(stFuncDesc::eType i_eType)
+{
+    pAList_Cell l_pEl = NULL;
+    while ((l_pEl = m_cFunctions.Get_Next(l_pEl)))
+    {
+        stFuncDesc *l_pSearch = m_cFunctions.Get_Data(l_pEl);
+        if (i_eType == l_pSearch->eFtype)
+        {       
+            return l_pSearch;
+        }
+    }
+
+    return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void CpreManager::AddSourcesDir(const tXCHAR* i_pDir)
 {
     CWString l_cDir(i_pDir);
@@ -664,7 +681,7 @@ eErrorCodes CpreManager::ScanFunctions()
                         if (    (m_bConsecutiveId)
                                 //if only 10% of free ID space is available - random selection isn't efficient any more 
                                 //and will consume CPU cycles for nothing - better to switch to continuous search
-                             || (l_szTraceIdUsed >= (MAXUINT16/10)) 
+                             || (l_szTraceIdUsed >= (((size_t)MAXUINT16)*90/100)) 
                            )
                         {
                             while (l_szTraceIt < MAXUINT16)
@@ -797,7 +814,21 @@ eErrorCodes CpreManager::ScanFunctions()
         }
     }
 
-    if (m_bConsecutiveId)
+
+    if (m_cModules.Count() >= (1u << 13))
+    {
+        l_eError = eErrorModuleIdOverFlow;
+        OSPRINT(TM("ERROR: Count of registered modules %u > 8192\n"), m_cModules.Count());
+    }
+
+    if (m_cCounters.Count() >= MAXUINT16)
+    {
+        l_eError = eErrorTelIdOverFlow;
+        OSPRINT(TM("ERROR: Count of registered telemetry items %u > 65536\n"), m_cCounters.Count());
+    }
+
+
+    if ((m_bConsecutiveId) && (eErrorNo == l_eError))
     {
         for (size_t l_szI = 0; l_szI < l_szTraceMax; l_szI++)    
         {

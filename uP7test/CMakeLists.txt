@@ -22,6 +22,7 @@ add_executable(${PROJECT_NAME}
                t4MultiCore.cpp     t4MultiCore.h
                t5Time.cpp          t5Time.h
                t6Resync.cpp        t6Resync.h			   
+               t7Pattern.cpp       t7Pattern.h
               )
 
 if(MSVC)

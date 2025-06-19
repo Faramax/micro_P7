@@ -462,6 +462,16 @@ bool uP7TrcRegisterModule(const char *i_pName, enum euP7Level i_eVerbosity, huP7
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void uP7TrcRegisterModules(const char *i_pPattern, enum euP7Level i_eVerbosity)
+{
+    UNUSED_ARG(i_pPattern);
+    UNUSED_ARG(i_eVerbosity);
+    //FUNCTION HAS NO BODY: existing only for pre-processor purpose
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool uP7TrcFindModule(const char *i_pName, huP7Module *o_hModule)
 {
     if (    (!g_puP7.bInitialized)
@@ -831,6 +841,25 @@ bool uP7TelCreateCounter(const char *i_pName,
 
     return false;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void uP7TelCreateCounters(const char* i_pPattern,
+                          tuP7TelVal  i_tMin,
+                          tuP7TelVal  i_tbAlarmMin,
+                          tuP7TelVal  i_tMax,
+                          tuP7TelVal  i_tAlarmMax,
+                          bool        i_bOn)
+{
+    UNUSED_ARG(i_pPattern);
+    UNUSED_ARG(i_tMin);
+    UNUSED_ARG(i_tbAlarmMin);
+    UNUSED_ARG(i_tMax);
+    UNUSED_ARG(i_tAlarmMax);
+    UNUSED_ARG(i_bOn);
+    //FUNCTION HAS NO BODY: existing only for pre-processor purpose
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool uP7TelSentSample(huP7TelId i_hID, tuP7TelVal i_tValue)

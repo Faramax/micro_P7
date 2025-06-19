@@ -30,6 +30,9 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
 
     l_pGroup->GetChildFirst(&l_pFunc);
 
+    bool l_bRegisterModules = false;
+    bool l_bCreateCounters  = false;
+
     while (l_pFunc)
     {
         tXCHAR *l_pName = NULL;
@@ -60,17 +63,30 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
                 break;
             }
         }
-        else if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMOD))
+        else if (    (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMOD))
+                  || (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMODS))
+                )
         {
-            tXCHAR *l_pName       = NULL;
+            tXCHAR *l_pFName       = NULL;
             tINT32  l_iNameIndex  = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iLevelIndex = UP7_FUNC_UNDEFINED_INDEX;
-            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pName))
+            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pFName))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_REGMOD_NAME, &l_iNameIndex))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_REGMOD_LEVEL, &l_iLevelIndex))
                )
             {
-                stFuncDesc *l_pFunction = new stFuncDesc(l_pName, stFuncDesc::eRegisterModule);
+                stFuncDesc::eType l_eType = stFuncDesc::eType::eCount;
+                if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMOD))
+                {
+                    l_eType = stFuncDesc::eRegisterModule;
+                }
+                else
+                {
+                    l_eType = stFuncDesc::eRegisterModules;
+                    l_bRegisterModules = true;
+                }
+
+                stFuncDesc *l_pFunction = new stFuncDesc(l_pFName, l_eType);
                 l_pFunction->pArgs[eRegModNameIndex]  = l_iNameIndex;
                 l_pFunction->pArgs[eRegModLevelIndex] = l_iLevelIndex;
                 o_rFunctions.Push_Last(l_pFunction);
@@ -81,16 +97,18 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
                 break;
             }
         }
-        if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTER))
+        else if (    (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTER))
+                  || (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTERS))
+                )
         {
-            tXCHAR *l_pName      = NULL;
+            tXCHAR *l_pFName      = NULL;
             tINT32  l_iNameIndex = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iMinIndex  = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iAMinIndex = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iMaxIndex  = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iAMaxIndex = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iOnIndex   = UP7_FUNC_UNDEFINED_INDEX;
-            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pName))
+            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pFName))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_NAME, &l_iNameIndex))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_MIN , &l_iMinIndex))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_AMIN, &l_iAMinIndex))
@@ -99,7 +117,18 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_ON  , &l_iOnIndex))
                )
             {
-                stFuncDesc *l_pFunction = new stFuncDesc(l_pName, stFuncDesc::eCreateCounter);
+                stFuncDesc::eType l_eType = stFuncDesc::eType::eCount;
+                if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTER))
+                {
+                    l_eType = stFuncDesc::eCreateCounter;
+                }
+                else
+                {
+                    l_eType = stFuncDesc::eCreateCounters;
+                    l_bCreateCounters = true;
+                }
+
+                stFuncDesc *l_pFunction = new stFuncDesc(l_pFName, l_eType);
                 l_pFunction->pArgs[eMkCounterNameIndex]     = l_iNameIndex;
                 l_pFunction->pArgs[eMkCounterMinIndex]      = l_iMinIndex;
                 l_pFunction->pArgs[eMkCounterAlarmMinIndex] = l_iAMinIndex;
@@ -124,6 +153,21 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
 
     SAFE_RELEASE(l_pFunc);
     SAFE_RELEASE(l_pGroup);
+
+
+    if (!l_bRegisterModules)
+    {
+        stFuncDesc *l_pFunction = new stFuncDesc(TM("uP7TrcRegisterModules"), stFuncDesc::eRegisterModules);
+        l_pFunction->InitDefaultArgs();
+        o_rFunctions.Push_First(l_pFunction);
+    }
+    
+    if (!l_bCreateCounters)
+    {
+        stFuncDesc *l_pFunction = new stFuncDesc(TM("uP7TelCreateCounters"), stFuncDesc::eCreateCounters);
+        l_pFunction->InitDefaultArgs();
+        o_rFunctions.Push_First(l_pFunction);
+    }
 
 
     if (    (l_bReturn)

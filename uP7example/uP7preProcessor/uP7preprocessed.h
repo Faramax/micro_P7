@@ -16,15 +16,15 @@
 //                                                 DO NOT MODIFY IT                                                   //
 //                                   WE DO NOT RECOMMEND TO COMMIT IT (svn, hq, etc.)                                 //
 //                                  >>>INSTEAD PLEASE COMMIT XML CONFIGURATION FILE<<<                                //
-//                                           Generated: 2024.05.15 00:44:28                                           //
+//                                           Generated: 2024.09.28 18:53:08                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_TARGET_CPU_H
 #define UP7_TARGET_CPU_H
 
 #define UP7_CONSECUTIVE_TRACE_ID
 
-uint32_t g_uSessionId = 1734022872;
-uint8_t  g_bCrc7 = 52;
+uint32_t g_uSessionId = 3509174532;
+uint8_t  g_bCrc7 = 20;
 
 
 size_t g_szModules = 2;

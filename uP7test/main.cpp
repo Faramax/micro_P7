@@ -105,8 +105,18 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     {
         printf("ERROR: Failed!\n");
         return -1;
-    }
+    }                            
 
+    printf("Execute t7Pattern ... \n");
+    if (t7Pattern(i_pArgV[1]))
+    {
+        printf("Succeed!\n");
+    }
+    else
+    {
+        printf("ERROR: Failed!\n");
+        return -1;
+    }
 
     return 0;
 }

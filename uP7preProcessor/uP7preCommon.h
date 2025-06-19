@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <random>
+#include <memory>
+#include <cassert>
+#include <stdexcept>
 #include <inttypes.h>
 
 #include "GTypes.h"

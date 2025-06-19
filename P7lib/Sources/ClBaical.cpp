@@ -1778,7 +1778,7 @@ eClient_Status CClBaical::Sent(tUINT32          i_dwChannel_ID,
     CTPacket        *l_pPacket       = NULL;
     tUINT32          l_dwTotal_Size  = i_dwSize + (tUINT32)sizeof(sH_User_Raw);
     tUINT32          l_dwPacket_Size = 0;
-    //Wanr: variables without default value!
+    //Warn: variables without default value!
     tBOOL            l_bExit;
     tUINT32          l_dwChunk_Offs;
     CTPData          l_cData;

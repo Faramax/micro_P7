@@ -333,6 +333,23 @@ bool uP7TrcRegisterModule(const char *i_pName, enum euP7Level i_eVerbosity, huP7
 
 
 /**
+* \brief function is used to register group of trace modules using pattern. Sometimes user need to register many 
+*        different modules in range and expect that pre-processor will parse it properly, for example
+*        "Group1/Subgroup1" .. "Group1/Subgroup100", "Group2/Subgroup1" .. "Group2/Subgroup100" 
+*        Register every module by individual call might be boring and expensive.
+*        In such case this function can help. It offer %[x1..X2] pattern to describe continuously growing indexes.
+*        Where: 
+*          * X1 - positive decimal integer in range [0 .. 2^31]
+*          * X2 - positive decimal integer in range [X1+1 .. X1+2^9]
+*        Using pattern - example above can be presented like that 
+*          uP7TrcRegisterModules("Group%[1..2]/Subgroup%03[1..100]", euP7Level_Debug);
+* @param i_pPattern [in] module name pattern
+* @param i_eVerbosity [in] modules verbosity
+*/
+void uP7TrcRegisterModules(const char *i_pPattern, enum euP7Level i_eVerbosity);
+
+
+/**
  * \brief function is used to find trace module by name. Modules are used to group trace messages by modules, use the same
  *        verbosity level per module and to have nice formatting on Baical side - each trace will be marked with module 
  *        name. If module with such name is already registered - existing handle will be returned
@@ -407,6 +424,35 @@ bool uP7TelCreateCounter(const char *i_pName,
                          bool        i_bOn,
                          huP7TelId  *o_pID 
                         );
+
+/**
+* \brief function to register telemetry counters using pattern. Sometimes user need to register many 
+*        different counters in range and expect that pre-processor will parse it properly, for example
+*        "Group1/Subgroup1" .. "Group1/Subgroup100", "Group2/Subgroup1" .. "Group2/Subgroup100" 
+*        Register every module by individual call might be boring and expensive.
+*        In such case this function can help. It offer %[x1..X2] pattern to describe continuously growing indexes.
+*        Pattern also support next shape %0A[x1..X2] where A is number of 0 inserted for digit padding
+*        Where: 
+*          * X1 - positive decimal integer in range [0 .. 2^31]
+*          * X2 - positive decimal integer in range [X1+1 .. X1+2^9]
+*        Using pattern - example above can be presented like that 
+*          uP7TrcRegisterModules("Group%[1..2]/Subgroup%03[1..100]", euP7Level_Debug);
+* @param i_pPattern [in] module name pattern
+* @param i_tMin [in] min counter value
+* @param i_tbAlarmMin [in] value below which counter value will be interpreted as alarm signal on Baical's side
+* @param i_tMax [in] max counter value
+* @param i_tAlarmMax [in] value above which counter value will be interpreted as alarm signal on Baical's side
+* @param i_bOn [in] default counter state (true - on, false - off), can be changed later in real-time from Baical
+* @param i_eVerbosity [in] modules verbosity
+*/
+void uP7TelCreateCounters(const char *i_pPattern, 
+                          tuP7TelVal  i_tMin,
+                          tuP7TelVal  i_tbAlarmMin,
+                          tuP7TelVal  i_tMax,
+                          tuP7TelVal  i_tAlarmMax,
+                          bool        i_bOn);
+
+
 
 /**
  * \brief function to sent counter sample

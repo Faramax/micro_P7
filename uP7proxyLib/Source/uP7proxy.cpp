@@ -460,6 +460,7 @@ void CuP7proxy::ReleaseChannel(IP7_Client *i_pClient, uint32_t i_uID)
     CLock l_cLock(&m_cLock);
     if (!i_pClient)
     {
+        uERROR(TM("uP7 proxy can't find client"), 0);
         return;
     }
 
@@ -480,11 +481,6 @@ void CuP7proxy::ReleaseChannel(IP7_Client *i_pClient, uint32_t i_uID)
     else
     {
         uERROR(TM("uP7 proxy can't unregister channel %u"), i_uID);
-    }
-
-    if (!i_pClient)
-    {
-        uERROR(TM("uP7 proxy can't find client"), 0);
     }
 }
 
