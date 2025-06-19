@@ -1,8 +1,9 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     WARNING!                                                       //
-//                                       this header is automatically generated                                       //
+//                                       this header was automatically generated                                      //
 //                                                 DO NOT MODIFY IT                                                   //
-//                                           Generated: 2023.03.11 15:24:35                                           //
+//                                   WE DO NOT RECOMMEND TO COMMIT IT (svn, hq, etc.)                                 //
+//                                  >>>INSTEAD PLEASE COMMIT XML CONFIGURATION FILE<<<                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_IDS_H
 #define UP7_IDS_H

@@ -1,17 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
+#include "uP7version.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
@@ -159,10 +160,32 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
 
     if (4 > i_iArgC)
     {
-        printf("uP7preProcessor <config.xml> <sources files dir> ... <sources files dir> <output dir>\n");
-        printf("Not all arguments are specified\n");
-        printf("Please refer to documentation for further details\n");
-        l_iReturn = eErrorArguments;
+        if (    (1 < i_iArgC) 
+             && (0 == PStrCmp(i_pArgV[1], TM("--h")))
+           )
+        {
+            printf("Usage:\n");
+            printf(" > uP7preProcessor <cfg.xml> <src files dir 0> ... <src files dir N> <output dir>\n");
+            printf("Help:\n");
+            printf(" > uP7preProcessor --h\n");
+            printf("Version:\n");
+            printf(" > uP7preProcessor --v\n");
+
+        }
+        else if (    (1 < i_iArgC) 
+                  && (0 == PStrCmp(i_pArgV[1], TM("--v")))
+                )
+        {
+            printf("Version: %u.%u\n", uP7_VERSION_MAJOR, uP7_VERSION_MINOR);
+        }
+        else
+        {
+            printf("Error: Not all arguments were specified\n");
+            printf("uP7preProcessor configuration error, please use --h to get help\n");
+            printf("or refer to documentation for further details\n");
+            l_iReturn = eErrorArguments;
+        }
+
         goto l_lblExit;
     }
 
@@ -458,7 +481,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         goto l_lblExit;
     }
 
-    l_iReturn = l_cManager.Process();
+    l_iReturn = l_cManager.Process(l_pFiles);
 
     //save files & hashes
     if (eErrorNo == l_iReturn)

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7PROTOCOL_H
@@ -63,11 +62,11 @@ struct stuP7baseHdr
 struct stuP7traceHdr 
 {
     struct stuP7baseHdr stBase;
-    uint64_t qwTime;
-    uint32_t uSeqN;
-    uint32_t uThreadId;
-    uint16_t wId;
-    uint16_t bMod13Lvl3; //13 bits for module, 3 bits for level, no bit fields :)
+    uint64_t            qwTime;
+    uint32_t            uSeqN;
+    uint32_t            uThreadId;
+    uint16_t            wId;
+    uint16_t            bMod13Lvl3; //13 bits for module, 3 bits for level, no bit fields :)
     //At the end of structure there is serialized data:
     // - trace variable arguments values
     // - extensions [data X bits][type 8 bits], [data X bits][type 8 bits], ... [count 8 bits]
@@ -76,8 +75,8 @@ struct stuP7traceHdr
 struct stuP7traceVerbosityHdr 
 {
     struct stuP7baseHdr stBase;
-    uint16_t wModuleId; 
-    uint8_t  bLevel; 
+    uint16_t            wModuleId; 
+    uint8_t             bLevel; 
 } ST_ATTR_PACK(uP7_PROTOCOL_ALIGNMENT);
 
 
@@ -95,42 +94,42 @@ enum euP7telVal //flags for telemetry sample > stuP7baseHdr::bFlags
 struct stuP7telF8Hdr //telemetry sample float 8 bytes.
 {
     struct stuP7baseHdr stBase;
-    uint64_t         qwTime;
-    double           tValue;
-    uint16_t         wId;
+    uint64_t            qwTime;
+    double              tValue;
+    uint16_t            wId;
 } ST_ATTR_PACK(uP7_PROTOCOL_ALIGNMENT);
 
 struct stuP7telF4Hdr //telemetry sample float 4 bytes. 
 {
     struct stuP7baseHdr stBase;
-    uint64_t         qwTime;
-    float            tValue;
-    uint16_t         wId;
+    uint64_t            qwTime;
+    float               tValue;
+    uint16_t            wId;
 } ST_ATTR_PACK(uP7_PROTOCOL_ALIGNMENT);
 #endif
 
 struct stuP7telI8Hdr //telemetry sample int 8 bytes.
 {
     struct stuP7baseHdr stBase;
-    uint64_t         qwTime;
-    int64_t          tValue;
-    uint16_t         wId;
+    uint64_t            qwTime;
+    int64_t             tValue;
+    uint16_t            wId;
 } ST_ATTR_PACK(uP7_PROTOCOL_ALIGNMENT);
 
 struct stuP7telI4Hdr //telemetry sample int 4 bytes.
 {
     struct stuP7baseHdr stBase;
-    uint64_t         qwTime;
-    int32_t          tValue;
-    uint16_t         wId;
+    uint64_t            qwTime;
+    int32_t             tValue;
+    uint16_t            wId;
 } ST_ATTR_PACK(uP7_PROTOCOL_ALIGNMENT);
 
 
 struct stuP7telOnOffHdr 
 {
     struct stuP7baseHdr stBase;
-    uint16_t         wId;
-    uint8_t          bOn;
+    uint16_t            wId;
+    uint8_t             bOn;
 } ST_ATTR_PACK(uP7_PROTOCOL_ALIGNMENT);
 
 struct stuP7timeReqHdr 

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -386,7 +385,7 @@ Cfg::eResult CBNode::DelAttr(const tXCHAR *i_pName)
 }//DelAttr
 
        
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Cfg::eResult CBNode::GetAttrInt32(const tXCHAR *i_pName, tINT32 *o_pValue)
 {
     CLock               l_cLock(m_pCS);
@@ -397,6 +396,43 @@ Cfg::eResult CBNode::GetAttrInt32(const tXCHAR *i_pName, tINT32 *o_pValue)
          || (!i_pName) 
          || (!o_pValue) 
        )
+    {
+        return l_eReturn;
+    }
+
+    while (1)
+    {
+        if ( l_pXmlAttr.empty() )
+        {
+            break;
+        }
+        else if ( 0 == PStrICmp(i_pName, l_pXmlAttr.name()) )
+        {
+            *o_pValue = l_pXmlAttr.as_int();
+            l_eReturn = Cfg::eOk;
+            break;
+        }
+        else
+        {
+            l_pXmlAttr = l_pXmlAttr.next_attribute();
+        }
+    }
+
+    return l_eReturn;
+}//GetAttrInt32
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Cfg::eResult CBNode::GetAttrUint32(const tXCHAR *i_pName, tUINT32 *o_pValue)
+{
+    CLock               l_cLock(m_pCS);
+    Cfg::eResult         l_eReturn  = Cfg::eErrorInternal;
+    pugi::xml_attribute l_pXmlAttr = m_cXmlNode.first_attribute();
+
+    if (    (!m_bInitialized)
+        || (!i_pName) 
+        || (!o_pValue) 
+        )
     {
         return l_eReturn;
     }
@@ -420,7 +456,80 @@ Cfg::eResult CBNode::GetAttrInt32(const tXCHAR *i_pName, tINT32 *o_pValue)
     }
 
     return l_eReturn;
-}//GetAttrInt32
+}//GetAttrUint32
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Cfg::eResult CBNode::GetAttrInt64(const tXCHAR *i_pName, tINT64 *o_pValue)
+{
+    CLock               l_cLock(m_pCS);
+    Cfg::eResult         l_eReturn  = Cfg::eErrorInternal;
+    pugi::xml_attribute l_pXmlAttr = m_cXmlNode.first_attribute();
+
+    if (    (!m_bInitialized)
+        || (!i_pName) 
+        || (!o_pValue) 
+        )
+    {
+        return l_eReturn;
+    }
+
+    while (1)
+    {
+        if ( l_pXmlAttr.empty() )
+        {
+            break;
+        }
+        else if ( 0 == PStrICmp(i_pName, l_pXmlAttr.name()) )
+        {
+            *o_pValue = l_pXmlAttr.as_int64();
+            l_eReturn = Cfg::eOk;
+            break;
+        }
+        else
+        {
+            l_pXmlAttr = l_pXmlAttr.next_attribute();
+        }
+    }
+
+    return l_eReturn;
+}//GetAttrInt64
+
+ ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Cfg::eResult CBNode::GetAttrUint64(const tXCHAR *i_pName, tUINT64 *o_pValue)
+{
+    CLock               l_cLock(m_pCS);
+    Cfg::eResult         l_eReturn  = Cfg::eErrorInternal;
+    pugi::xml_attribute l_pXmlAttr = m_cXmlNode.first_attribute();
+
+    if (    (!m_bInitialized)
+        || (!i_pName) 
+        || (!o_pValue) 
+        )
+    {
+        return l_eReturn;
+    }
+
+    while (1)
+    {
+        if ( l_pXmlAttr.empty() )
+        {
+            break;
+        }
+        else if ( 0 == PStrICmp(i_pName, l_pXmlAttr.name()) )
+        {
+            *o_pValue = l_pXmlAttr.as_uint64();
+            l_eReturn = Cfg::eOk;
+            break;
+        }
+        else
+        {
+            l_pXmlAttr = l_pXmlAttr.next_attribute();
+        }
+    }
+
+    return l_eReturn;
+}//GetAttrUint64
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -505,6 +614,144 @@ Cfg::eResult CBNode::SetAttrInt32(const tXCHAR *i_pName, tINT32 i_lValue)
 
     return l_eReturn;
 }//SetAttrInt32
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Cfg::eResult CBNode::SetAttrUint32(const tXCHAR *i_pName, tUINT32 i_lValue)
+{
+    CLock               l_cLock(m_pCS);
+    Cfg::eResult        l_eReturn  = Cfg::eErrorInternal;
+    pugi::xml_attribute l_pXmlAttr = m_cXmlNode.first_attribute();
+
+    if (    (!m_bInitialized)
+        || (!i_pName) 
+        )
+    {
+        return l_eReturn;
+    }
+
+    while (1)
+    {
+        if (l_pXmlAttr.empty())
+        {
+            break;
+        }
+        else if ( 0 == PStrICmp(i_pName, l_pXmlAttr.name()) )
+        {
+            l_pXmlAttr.set_value(i_lValue);
+            l_eReturn = Cfg::eOk;
+            break;
+        }
+        else
+        {
+            l_pXmlAttr = l_pXmlAttr.next_attribute();
+        }
+    }
+
+    if (Cfg::eOk != l_eReturn)
+    {
+        l_pXmlAttr = m_cXmlNode.append_attribute(i_pName);
+        if (false == l_pXmlAttr.empty())
+        {
+            l_pXmlAttr.set_value(i_lValue);
+            l_eReturn = Cfg::eOk;
+        }
+    }
+
+    return l_eReturn;
+}//SetAttrUint32
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Cfg::eResult CBNode::SetAttrInt64(const tXCHAR *i_pName, tINT64 i_lValue)
+{
+    CLock               l_cLock(m_pCS);
+    Cfg::eResult        l_eReturn  = Cfg::eErrorInternal;
+    pugi::xml_attribute l_pXmlAttr = m_cXmlNode.first_attribute();
+
+    if (    (!m_bInitialized)
+        || (!i_pName) 
+        )
+    {
+        return l_eReturn;
+    }
+
+    while (1)
+    {
+        if (l_pXmlAttr.empty())
+        {
+            break;
+        }
+        else if ( 0 == PStrICmp(i_pName, l_pXmlAttr.name()) )
+        {
+            l_pXmlAttr.set_value64(i_lValue);
+            l_eReturn = Cfg::eOk;
+            break;
+        }
+        else
+        {
+            l_pXmlAttr = l_pXmlAttr.next_attribute();
+        }
+    }
+
+    if (Cfg::eOk != l_eReturn)
+    {
+        l_pXmlAttr = m_cXmlNode.append_attribute(i_pName);
+        if (false == l_pXmlAttr.empty())
+        {
+            l_pXmlAttr.set_value64(i_lValue);
+            l_eReturn = Cfg::eOk;
+        }
+    }
+
+    return l_eReturn;
+}//SetAttrInt64
+
+
+ ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Cfg::eResult CBNode::SetAttrUint64(const tXCHAR *i_pName, tUINT64 i_lValue)
+{
+    CLock               l_cLock(m_pCS);
+    Cfg::eResult        l_eReturn  = Cfg::eErrorInternal;
+    pugi::xml_attribute l_pXmlAttr = m_cXmlNode.first_attribute();
+
+    if (    (!m_bInitialized)
+        || (!i_pName) 
+        )
+    {
+        return l_eReturn;
+    }
+
+    while (1)
+    {
+        if (l_pXmlAttr.empty())
+        {
+            break;
+        }
+        else if ( 0 == PStrICmp(i_pName, l_pXmlAttr.name()) )
+        {
+            l_pXmlAttr.set_value64(i_lValue);
+            l_eReturn = Cfg::eOk;
+            break;
+        }
+        else
+        {
+            l_pXmlAttr = l_pXmlAttr.next_attribute();
+        }
+    }
+
+    if (Cfg::eOk != l_eReturn)
+    {
+        l_pXmlAttr = m_cXmlNode.append_attribute(i_pName);
+        if (false == l_pXmlAttr.empty())
+        {
+            l_pXmlAttr.set_value64(i_lValue);
+            l_eReturn = Cfg::eOk;
+        }
+    }
+
+    return l_eReturn;
+}//SetAttrUint64
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

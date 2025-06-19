@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -545,7 +544,7 @@ void CProxyTelemetry::On_Receive(tUINT32 i_dwChannel,
     
                     if (!m_pFifo->Send(&l_stEnableOut, sizeof(stuP7telOnOffHdr)))
                     {
-                        uWARNING(TM("[CPU#%d] Can't send verobsity update"), (int)m_bId);
+                        uWARNING(TM("[CPU#%d] Can't send verbosity update"), (int)m_bId);
                     }
                 }
                 else if (EP7TEL_TYPE_DELETE == GET_EXT_HEADER_SUBTYPE(l_sHeader))

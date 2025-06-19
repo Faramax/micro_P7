@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 set(PATH_UP7_PROXY_API ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.10)
 
 project(uP7preProcessor)
 
@@ -34,8 +34,6 @@ add_executable(${PROJECT_NAME}
                uP7preManager.cpp            uP7preManager.h
                uP7preFunction.cpp           uP7preFunction.h
               )
-
-target_link_libraries (${PROJECT_NAME} uP7 p7)
 
 set_ide_folder(${PROJECT_NAME})
 

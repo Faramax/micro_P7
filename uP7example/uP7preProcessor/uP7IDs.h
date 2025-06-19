@@ -1,21 +1,21 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     WARNING!                                                       //
-//                                       this header is automatically generated                                       //
+//                                       this header was automatically generated                                      //
 //                                                 DO NOT MODIFY IT                                                   //
-//                                           Generated: 2021.12.25 18:48:46                                           //
+//                                   WE DO NOT RECOMMEND TO COMMIT IT (svn, hq, etc.)                                 //
+//                                  >>>INSTEAD PLEASE COMMIT XML CONFIGURATION FILE<<<                                //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_IDS_H
 #define UP7_IDS_H

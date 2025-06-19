@@ -1,18 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
 #include "crc7.h"
+#include <vector>
 
 
 static const tXCHAR *g_puP7files[] = 
@@ -33,8 +33,6 @@ static const tXCHAR *g_puP7files[] =
 #define uP7_IDS_H            TM("/uP7IDs.h")
 #define uP7_SESSION_TXT      "uint32_t g_uSessionId = "
 #define uP7_CRC7_TXT         "uint8_t  g_bCrc7 = "
-#define uP7_EPOCHTIME_TXT    "//uint64_t g_uEpochTime = 0x"
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -87,7 +85,7 @@ void CpreManager::AddSourcesDir(const tXCHAR* i_pDir)
     // /home/user/p1/libMyLib
     // /home/user/p1/libMyLibHal
     //And then function is called GetRelativePath("/home/user/p1/libMyLibHal/myFile.cpp") will return
-    // Hal/myFile.cpp becuse it is first match.
+    // Hal/myFile.cpp because it is first match.
     //To avoid such error - need to put / at the end of the directory
     l_cDir.Append(1, TM("/"));
     m_cSrcDirs.Push_Last(NormalizePath(l_cDir.Get()));
@@ -259,11 +257,14 @@ tBOOL CpreManager::CheckFileHash(const tXCHAR *i_pName, const tXCHAR *i_pHash)
         {
             if (0 == memcmp(l_pFile->GetHash(), l_pHash, l_szHashSize))
             {
-                //OSPRINT(TM("INFO: Set file read-only, because HASH wasn't changed since last time {%s}\n"), i_pName);
                 if (l_pFile->GetModification() != CpreFile::eReadOnly)
                 {
                     l_pFile->SetModification(CpreFile::eNotModified);
                 }
+            }
+            else if (m_bVerbose)
+            {
+                OSPRINT(TM("INFO: File {%s} has been modified since last generation\n"), i_pName);
             }
             break;
         }
@@ -340,11 +341,12 @@ tBOOL CpreManager::SetExcludedFile(const tXCHAR *i_pName)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int CpreManager::Process()
+int CpreManager::Process(Cfg::INode *i_pFiles)
 {
     struct stSessionHeader
     {
         tUINT32  uSessionId;
+        tUINT8   uCrc7;
         tUINT64  qwEpochTime;
         tUINT8   pSessionHash[CKeccak::EBITS_256 / 8];
         bool     bValid;
@@ -358,7 +360,6 @@ int CpreManager::Process()
     tUINT32            l_uSessionId    = l_cRandSession(l_cRd);  
     tUINT64            l_qwEpochTime   = GetEpochTime();
     tUINT8             l_uSessionCrc7  = 0;
-    CSessionFile      *l_pOldSession   = nullptr;
     CSessionFile      *l_pNewSession   = nullptr;
     stSessionHeader    l_stSessionH;
     CWString           l_cBinFilePath(m_pOutDir);
@@ -368,12 +369,32 @@ int CpreManager::Process()
         l_uSessionId = l_cRandSession(l_cRd);
     }
 
-    l_uSessionCrc7= GetCrc7((const uint8_t *)&l_uSessionId, sizeof(l_uSessionId));
+    l_uSessionCrc7 = GetCrc7((const uint8_t *)&l_uSessionId, sizeof(l_uSessionId));
 
 
     l_cBinFilePath.Append(3, TM("/"), m_pName, TM(".") uP7_FILES_EXT);
 
     memset(&l_stSessionH, 0, sizeof(l_stSessionH));
+
+    if (i_pFiles)
+    {
+        tXCHAR *l_pSfsHash = nullptr;
+
+        uint32_t l_uCrc7 = 0;
+        if (    (Cfg::eResult::eOk == i_pFiles->GetAttrUint32(XML_NARG_OPTIONS_FILES_CRC7, &l_uCrc7))
+             && (Cfg::eResult::eOk == i_pFiles->GetAttrUint32(XML_NARG_OPTIONS_FILES_SESSION_ID, &l_stSessionH.uSessionId))
+             && (Cfg::eResult::eOk == i_pFiles->GetAttrUint64(XML_NARG_OPTIONS_FILES_TIME, &l_stSessionH.qwEpochTime))
+             && (Cfg::eResult::eOk == i_pFiles->GetAttrText(XML_NARG_OPTIONS_FILES_SFILE_HASH, &l_pSfsHash))
+            )
+        {
+            l_stSessionH.uCrc7 = (tUINT8)l_uCrc7;
+            if (eErrorNo == ScanHash(l_pSfsHash, l_stSessionH.pSessionHash))
+            {
+                l_stSessionH.bValid = TRUE;
+            }
+        }
+
+    }
 
     while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
     {
@@ -476,68 +497,94 @@ int CpreManager::Process()
             }
         }
 
-        l_pOldSession = new CSessionFile(l_cBinFilePath.Get());
-        if (l_pOldSession->GetError() != eErrorNo)
+        //Sort files to have predicable Session file
+        SortFilesByNames();
+
+        l_pNewSession = new CSessionFile(&m_cFiles, l_uSessionId, l_uSessionCrc7, l_qwEpochTime);
+        l_eError = l_pNewSession->GetError();
+    }
+
+    if (eErrorNo == l_eError)
+    {
+        //Checking session file HASH and stored in XML
+        if (    (l_stSessionH.bValid)
+             && (0 == memcmp(l_stSessionH.pSessionHash, l_pNewSession->GetHash(), CKeccak::EBITS_256 / 8))
+           )
         {
+            if (m_bVerbose) OSPRINT(TM("INFO: Session file {%s} has not been modified (HASH==XML)!\n"), l_cBinFilePath.Get());
+
+            l_pNewSession->SetSession(l_stSessionH.uSessionId, l_stSessionH.uCrc7, l_stSessionH.qwEpochTime);
+
+            //check that session file is already generated and has the same parameters
+            CSessionFile *l_pOldSession = new CSessionFile(l_cBinFilePath.Get());
+            bool l_bNeedToSaveSession = true;
+            if (l_pOldSession->GetError() == eErrorNo)
+            {
+                if (    (0 == memcmp(l_pOldSession->GetHash(), l_pNewSession->GetHash(), CKeccak::EBITS_256 / 8))
+                     && (l_pOldSession->GetHeader()->qwTimeStamp == l_pNewSession->GetHeader()->qwTimeStamp)
+                     && (l_pOldSession->GetHeader()->uCrc7 == l_pNewSession->GetHeader()->uCrc7)
+                     && (l_pOldSession->GetHeader()->uSessionId == l_pNewSession->GetHeader()->uSessionId)
+                   )
+                {
+                    //No need to regenerate
+                    l_bNeedToSaveSession = false;
+                }
+                else
+                {
+                    if (m_bVerbose) OSPRINT(TM("WARNING: Stored on HDD File {%s} has unexpected data!\n"), l_cBinFilePath.Get());
+                }
+            }
+
             delete l_pOldSession;
             l_pOldSession = nullptr;
-        }
 
-        l_pNewSession = new CSessionFile(&m_cFiles, l_uSessionId, l_qwEpochTime);
-        l_eError = l_pNewSession->GetError();
-
-        if (eErrorNo == ParseDescriptionHeaderFile(l_stSessionH.uSessionId, l_stSessionH.qwEpochTime, l_stSessionH.pSessionHash))
-        {
-            l_stSessionH.bValid = true;
-        }
-    }
-
-    if (eErrorNo == l_eError)
-    {
-        if (l_pOldSession)
-        {
-            if (0 == memcmp(l_pOldSession->GetHash(), l_pNewSession->GetHash(), CKeccak::EBITS_256 / 8))
+            if (l_bNeedToSaveSession)
             {
-                l_uSessionId   = l_pOldSession->GetHeader()->uSessionId;
-                l_qwEpochTime  = l_pOldSession->GetHeader()->qwTimeStamp;
-                l_uSessionCrc7 = l_pOldSession->GetHeader()->uCrc7;
+                if (m_bVerbose) OSPRINT(TM("INFO: Restore file {%s} !\n"), l_cBinFilePath.Get());
+                l_eError = l_pNewSession->Save(l_cBinFilePath.Get());
             }
         }
-
-        if (l_stSessionH.bValid)
+        else
         {
-            if (0 == memcmp(l_stSessionH.pSessionHash, l_pNewSession->GetHash(), CKeccak::EBITS_256 / 8))
-            {
-                l_uSessionId   = l_stSessionH.uSessionId;
-                l_qwEpochTime  = l_stSessionH.qwEpochTime;
-                l_uSessionCrc7 = GetCrc7((const uint8_t *)&l_uSessionId, sizeof(l_uSessionId));;
-            }
+            if (m_bVerbose) OSPRINT(TM("INFO: Generate file {%s} !\n"), l_cBinFilePath.Get());
+            l_eError = l_pNewSession->Save(l_cBinFilePath.Get());
         }
     }
 
-    if (eErrorNo == l_eError)
-    {
-        l_pNewSession->SetSession(l_uSessionId, l_uSessionCrc7, l_qwEpochTime);
-        l_eError = l_pNewSession->Save(l_cBinFilePath.Get());
-    }
 
     if (eErrorNo == l_eError)
     {
-        l_eError = CreateDescriptionHeaderFile(l_uSessionId, l_uSessionCrc7, l_qwEpochTime, l_pNewSession->GetHash(), TRUE);
+        l_eError = CreateDescriptionHeaderFile(l_pNewSession->GetHeader()->uSessionId, 
+                                               l_pNewSession->GetHeader()->uCrc7,
+                                               l_pNewSession->GetHeader()->qwTimeStamp
+                                              );
     }
 
     if (    (eErrorNo == l_eError)
          && (m_bIDsHeader)
        )
     {
-        l_eError = CreateIDsHeaderFile(l_uSessionId, l_qwEpochTime, TRUE);
+        l_eError = CreateIDsHeaderFile(l_pNewSession->GetHeader()->qwTimeStamp);
     }
 
-
-    if (l_pOldSession)
+    //save to XML sessions parameters: id, crc, timestamp, hashes for different files
+    if (    (eErrorNo == l_eError)
+         && (i_pFiles)
+       )
     {
-        delete l_pOldSession;
-        l_pOldSession = nullptr;
+        const size_t l_szHashSize = (CKeccak::EBITS_256 / 8)* 2 + 1;
+        tXCHAR l_pHashSf[l_szHashSize];
+        PrintHash(l_pNewSession->GetHash(), l_pHashSf);
+
+
+        if (    (Cfg::eResult::eOk != i_pFiles->SetAttrUint32(XML_NARG_OPTIONS_FILES_CRC7, l_pNewSession->GetHeader()->uCrc7))
+             || (Cfg::eResult::eOk != i_pFiles->SetAttrUint32(XML_NARG_OPTIONS_FILES_SESSION_ID, l_pNewSession->GetHeader()->uSessionId))
+             || (Cfg::eResult::eOk != i_pFiles->SetAttrUint64(XML_NARG_OPTIONS_FILES_TIME, l_pNewSession->GetHeader()->qwTimeStamp))
+             || (Cfg::eResult::eOk != i_pFiles->SetAttrText(XML_NARG_OPTIONS_FILES_SFILE_HASH, l_pHashSf))
+           )
+        {
+            l_eError = eErrorXmlParsing;
+        }
     }
 
     if (l_pNewSession)
@@ -616,7 +663,7 @@ eErrorCodes CpreManager::ScanFunctions()
 
                         if (    (m_bConsecutiveId)
                                 //if only 10% of free ID space is available - random selection isn't efficient any more 
-                                //and will consume CPU cycles for nothing - better to switch to continous search
+                                //and will consume CPU cycles for nothing - better to switch to continuous search
                              || (l_szTraceIdUsed >= (MAXUINT16/10)) 
                            )
                         {
@@ -807,34 +854,8 @@ tBOOL CpreManager::SaveHashes(Cfg::INode *i_pFiles)
     tXCHAR        l_pTxtHash[l_szHashSize * 2 + 1];
     tBOOL         l_bReturn = TRUE;
 
-    //sorting to do not change XML all the time
-    while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
-    {
-        pAList_Cell l_pMax = l_pFileEl;
-        pAList_Cell l_pCur = l_pFileEl;
-
-        while ((l_pCur = m_cFiles.Get_Next(l_pCur)))
-        {
-            CpreFile *l_pFileM = m_cFiles.Get_Data(l_pMax);
-            CpreFile *l_pFileI = m_cFiles.Get_Data(l_pCur);
-
-            if (0 > PStrICmp(GetRelativePath(l_pFileI->GetOsPath()), GetRelativePath(l_pFileM->GetOsPath())))
-            {
-                l_pMax = l_pCur;
-            }
-        }
-
-        if (l_pMax != l_pFileEl)
-        {
-            m_cFiles.Extract(l_pMax);
-            m_cFiles.Put_After(m_cFiles.Get_Prev(l_pFileEl), l_pMax);
-            l_pFileEl = l_pMax;
-        }
-    } //while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
-
-
-    l_pFileEl = NULL;
-
+    //Sort files to have predicable XML output
+    SortFilesByNames();
 
     while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
     {
@@ -872,6 +893,39 @@ tBOOL CpreManager::SaveHashes(Cfg::INode *i_pFiles)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CpreManager::SortFilesByNames()
+{
+    pAList_Cell l_pFileEl = NULL;
+
+    //sorting to do not change XML all the time
+    while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
+    {
+        pAList_Cell l_pMax = l_pFileEl;
+        pAList_Cell l_pCur = l_pFileEl;
+
+        while ((l_pCur = m_cFiles.Get_Next(l_pCur)))
+        {
+            CpreFile *l_pFileM = m_cFiles.Get_Data(l_pMax);
+            CpreFile *l_pFileI = m_cFiles.Get_Data(l_pCur);
+
+            if (0 > PStrICmp(GetRelativePath(l_pFileI->GetOsPath()), GetRelativePath(l_pFileM->GetOsPath())))
+            {
+                l_pMax = l_pCur;
+            }
+        }
+
+        if (l_pMax != l_pFileEl)
+        {
+            m_cFiles.Extract(l_pMax);
+            m_cFiles.Put_After(m_cFiles.Get_Prev(l_pFileEl), l_pMax);
+            l_pFileEl = l_pMax;
+        }
+    } //while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
+}
+
+
+
 static const char *g_pVargs[]
 {
     "euP7_arg_unk"      ,  //P7TRACE_ARG_TYPE_UNK    = 0x00,
@@ -892,15 +946,14 @@ static const char *g_pVargs[]
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession, 
-                                                     tUINT8        i_uSessionCrc7, 
-                                                     tUINT64       i_qwEpochTime,  
-                                                     const tUINT8  i_pHash[CKeccak::EBITS_256 / 8],
-                                                     tBOOL         i_bUpdate
+eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32 i_uSession, 
+                                                     tUINT8  i_uSessionCrc7, 
+                                                     tUINT64 i_qwEpochTime
                                                     )
 {
     CWString             l_cHdrFilePath(m_pOutDir);
     CPFile               l_cuP7Hdrfile;
+    std::vector<char>    l_cFileBody;
     char                *l_pBuffer   = NULL;
     size_t               l_szBuffer  = 16384;
     eErrorCodes          l_eError    = eErrorNo;
@@ -908,8 +961,10 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
     const char          *l_pPreamble = 
         "////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n"
         "//                                                     WARNING!                                                       //\n"
-        "//                                       this header is automatically generated                                       //\n"
+        "//                                       this header was automatically generated                                      //\n"
         "//                                                 DO NOT MODIFY IT                                                   //\n"
+        "//                                   WE DO NOT RECOMMEND TO COMMIT IT (svn, hq, etc.)                                 //\n"
+        "//                                  >>>INSTEAD PLEASE COMMIT XML CONFIGURATION FILE<<<                                //\n"
         "//                                           Generated: %04u.%02u.%02u %02u:%02u:%02u                                           //\n"
         "////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n"
         "#ifndef UP7_TARGET_CPU_H\n"
@@ -920,20 +975,6 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
     
 
     l_cHdrFilePath.Append(1, uP7_PREPREOCESSED_H);
-
-
-    if (    (!i_bUpdate)
-         && (CFSYS::File_Exists(l_cHdrFilePath.Get()))
-       )
-    {
-        return eErrorNo;
-    }
-
-    if (!l_cuP7Hdrfile.Open(l_cHdrFilePath.Get(), IFile::ECREATE | IFile::ESHARE_READ | IFile::EACCESS_WRITE))
-    {
-        OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-        return eErrorFileWrite;
-    }
 
     l_pBuffer = (char*)malloc(l_szBuffer);
     if (!l_pBuffer)
@@ -980,12 +1021,7 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                    (tUINT32)i_uSessionCrc7
                                   );
 
-
-        if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-        {
-            OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-            l_eError = eErrorFileWrite;
-        }
+        l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
     }
 
     if (eErrorNo == l_eError)
@@ -996,22 +1032,12 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                        "\n\nsize_t g_szModules = %u;\n"
                                        "struct stuP7Module g_pModules[] = \n{", 
                                        m_cModules.Count());
-
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
         else
         {
             l_szText = (size_t)sprintf(l_pBuffer, "\n\nsize_t g_szModules = 0;\nstruct stuP7Module *g_pModules = NULL;\n\n");
-
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
     }
 
@@ -1040,23 +1066,14 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
 
                 l_bFirst = false;
 
-                if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-                {
-                    OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                    l_eError = eErrorFileWrite;
-                    break;
-                }
+                l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
             }
         }
 
         if (eErrorNo == l_eError)
         {
             l_szText = (size_t)sprintf(l_pBuffer, "\n};\n\n"); 
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
     }
 
@@ -1069,21 +1086,12 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                        "struct stuP7telemetry g_pTelemetry[] = \n{",
                                        m_cCounters.Count()
                                       ); 
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
         else
         {
             l_szText = (size_t)sprintf(l_pBuffer, "size_t g_szTelemetry = 0;\nstruct stuP7telemetry *g_pTelemetry = NULL;\n\n");
-
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
     }
 
@@ -1113,24 +1121,14 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                     );
 
                 l_bFirst = false;
-
-                if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-                {
-                    OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                    l_eError = eErrorFileWrite;
-                    break;
-                }
+                l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
             }
         }
 
         if (eErrorNo == l_eError)
         {
             l_szText = (size_t)sprintf(l_pBuffer, "\n};\n\n"); 
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
     }
 
@@ -1156,12 +1154,7 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                            l_pTrace->GetId()
                                            );
 
-                if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-                {
-                    OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                    l_eError = eErrorFileWrite;
-                    break;
-                }
+                l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
 
 
 
@@ -1176,13 +1169,7 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                                     ((l_szI + 1) == l_szVA) ? " };\n" : ", " 
                                                     );
 
-                        if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-                        {
-                            OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                            l_eError = eErrorFileWrite;
-                            break;
-                        }
-
+                        l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
                     }
                     else
                     {
@@ -1208,21 +1195,12 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                        "struct stuP7Trace g_pTraces[] = \n{",
                                        m_cTraces.Count()
                                       ); 
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
         else
         {
             l_szText = (size_t)sprintf(l_pBuffer, "size_t g_szTraces = 0;\nstruct stuP7Trace *g_pTraces = NULL;\n");
-
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
     }
 
@@ -1262,47 +1240,80 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                             l_pTrace->GetId()
                                             );
             }
-            l_bFirst = false;
 
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-                break;
-            }
+            l_bFirst = false;
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
 
         if (eErrorNo == l_eError)
         {
             l_szText = (size_t)sprintf(l_pBuffer, "\n};"); 
-            if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-            {
-                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                l_eError = eErrorFileWrite;
-            }
+            l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
         }
     }
 
     if (eErrorNo == l_eError)
     {
-        const size_t  l_szHashSize = CKeccak::EBITS_256 / 8;
-        char          l_pTxtHash[l_szHashSize * 2 + 1];
+        l_szText = (size_t)sprintf(l_pBuffer, "\n#endif"); 
+        l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
+    }
 
-        for (size_t l_szI = 0; l_szI < l_szHashSize; l_szI++)
-        {
-            sprintf(l_pTxtHash + l_szI * 2, "%02X", i_pHash[l_szI]);
-        }
 
-        l_szText = (size_t)sprintf(l_pBuffer, "\n" uP7_EPOCHTIME_TXT "%" PRIx64 ";\n#endif //UP7_TARGET_CPU_H:%s",
-                                   (uint64_t)i_qwEpochTime, l_pTxtHash); 
-        if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
+    //calculating hash of existing file
+    CKeccak l_cHash;
+    tUINT8 l_pMemHash[CKeccak::EBITS_256 / 8];
+    tUINT8 l_pHddHash[CKeccak::EBITS_256 / 8];
+    memset(l_pHddHash, 0xA, CKeccak::EBITS_256 / 8);
+    memset(l_pMemHash, 0xB, CKeccak::EBITS_256 / 8);
+
+
+    l_cHash.UpdateB((const tUINT8*)l_cFileBody.data(), l_cFileBody.size());
+    l_cHash.Get_HashB(l_pMemHash, CKeccak::EBITS_256 / 8);
+
+    if (CFSYS::File_Exists(l_cHdrFilePath.Get()))
+    {
+        if (l_cuP7Hdrfile.Open(l_cHdrFilePath.Get(), IFile::EOPEN | IFile::EACCESS_READ))
         {
-            OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-            l_eError = eErrorFileWrite;
+            uint64_t l_qwSize = l_cuP7Hdrfile.Get_Size();
+            char *l_pFileData = (char*)malloc((size_t)l_qwSize);
+            if (l_pFileData)
+            {
+                if (l_qwSize == l_cuP7Hdrfile.Read((tUINT8*)l_pFileData, (size_t)l_qwSize))
+                {
+                    l_cHash.UpdateB((const tUINT8*)l_pFileData, (size_t)l_qwSize);
+                    l_cHash.Get_HashB(l_pHddHash, CKeccak::EBITS_256 / 8);
+                }
+
+                free(l_pFileData);
+            }
+
+            l_cuP7Hdrfile.Close(FALSE);
         }
     }
 
-    l_cuP7Hdrfile.Close(TRUE);
+    if (0 != memcmp(l_pMemHash, l_pHddHash, CKeccak::EBITS_256 / 8))
+    {
+        if (m_bVerbose) OSPRINT(TM("INFO: File {%s} has been changed, regenerating!\n"), l_cHdrFilePath.Get());
+       
+        if (l_cuP7Hdrfile.Open(l_cHdrFilePath.Get(), IFile::ECREATE | IFile::ESHARE_READ | IFile::EACCESS_WRITE))
+        {
+            if (l_cFileBody.size() != l_cuP7Hdrfile.Write((const tUINT8*)l_cFileBody.data(), l_cFileBody.size(), FALSE))
+            {
+                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
+                l_eError = eErrorFileWrite;
+            }
+            l_cuP7Hdrfile.Close(TRUE);
+        }
+        else
+        {
+            OSPRINT(TM("ERROR: Can't open file {%s}\n"), l_cHdrFilePath.Get());
+            l_eError = eErrorFileWrite;
+        }
+    }
+    else
+    {
+        if (m_bVerbose) OSPRINT(TM("INFO: The file {%s} has not been modified!\n"), l_cHdrFilePath.Get());
+    }
 
     free(l_pBuffer);
     l_pBuffer = NULL;
@@ -1313,7 +1324,7 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpochTime, tBOOL i_bUpdate)
+eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT64 i_qwEpochTime)
 {
     CWString             l_cHdrFilePath(m_pOutDir);
     CPFile               l_cuP7Hdrfile;
@@ -1321,33 +1332,22 @@ eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpo
     size_t               l_szBuffer  = 16384;
     eErrorCodes          l_eError    = eErrorNo;
     size_t               l_szText    = 0;
+    std::vector<char>    l_cFileBody;
     const size_t         l_szDefine  = 1024;
     char                 l_pDefine[l_szDefine];
     const char          *l_pPreamble = 
         "////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n"
         "//                                                     WARNING!                                                       //\n"
-        "//                                       this header is automatically generated                                       //\n"
+        "//                                       this header was automatically generated                                      //\n"
         "//                                                 DO NOT MODIFY IT                                                   //\n"
-        "//                                           Generated: %04u.%02u.%02u %02u:%02u:%02u                                           //\n"
+        "//                                   WE DO NOT RECOMMEND TO COMMIT IT (svn, hq, etc.)                                 //\n"
+        "//                                  >>>INSTEAD PLEASE COMMIT XML CONFIGURATION FILE<<<                                //\n"
         "////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n"
         "#ifndef UP7_IDS_H\n"
         "#define UP7_IDS_H\n\n";
     
 
     l_cHdrFilePath.Append(1, uP7_IDS_H);
-
-    if (    (!i_bUpdate)
-         && (CFSYS::File_Exists(l_cHdrFilePath.Get()))
-       )
-    {
-        return eErrorNo;
-    }
-
-    if (!l_cuP7Hdrfile.Open(l_cHdrFilePath.Get(), IFile::ECREATE | IFile::ESHARE_READ | IFile::EACCESS_WRITE))
-    {
-        OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-        return eErrorFileWrite;
-    }
 
     l_pBuffer = (char*)malloc(l_szBuffer);
     if (!l_pBuffer)
@@ -1381,23 +1381,9 @@ eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpo
                         l_uNanoseconds
                        );
 
-        l_szText = (size_t)sprintf(l_pBuffer, 
-                                   l_pPreamble, 
-                                   l_uYear,
-                                   l_uMonth,
-                                   l_uDay,
-                                   l_uHour,
-                                   l_uMinutes,
-                                   l_uSeconds,
-                                   i_uSession
-            );
+        //l_szText = (size_t)sprintf(l_pBuffer, l_pPreamble);
 
-
-        if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-        {
-            OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-            l_eError = eErrorFileWrite;
-        }
+        l_cFileBody.insert(l_cFileBody.end(), l_pPreamble, l_pPreamble + strlen(l_pPreamble));
     }
 
     if (    (eErrorNo == l_eError)
@@ -1421,12 +1407,7 @@ eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpo
                                                (l_pModEl == m_cModules.Get_Last()) ? "\n\n" : "\n"
                                               );
 
-                    if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-                    {
-                        OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                        l_eError = eErrorFileWrite;
-                        break;
-                    }
+                    l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
                 }
                 else
                 {
@@ -1460,12 +1441,7 @@ eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpo
                                                (l_pCntEl == m_cModules.Get_Last()) ? "\n\n" : "\n"
                                               );
 
-                    if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
-                    {
-                        OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-                        l_eError = eErrorFileWrite;
-                        break;
-                    }
+                    l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
                 }
                 else
                 {
@@ -1480,14 +1456,64 @@ eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpo
     if (eErrorNo == l_eError)
     {
         l_szText = (size_t)sprintf(l_pBuffer, "\n#endif //UP7_IDS_H"); 
-        if (l_szText != l_cuP7Hdrfile.Write((const tUINT8*)l_pBuffer, l_szText, FALSE))
+        l_cFileBody.insert(l_cFileBody.end(), l_pBuffer, l_pBuffer+l_szText);
+    }
+
+    //calculating hash of existing file
+    CKeccak l_cHash;
+    tUINT8 l_pMemHash[CKeccak::EBITS_256 / 8];
+    tUINT8 l_pHddHash[CKeccak::EBITS_256 / 8];
+    memset(l_pHddHash, 0xA, CKeccak::EBITS_256 / 8);
+    memset(l_pMemHash, 0xB, CKeccak::EBITS_256 / 8);
+
+
+    l_cHash.UpdateB((const tUINT8*)l_cFileBody.data(), l_cFileBody.size());
+    l_cHash.Get_HashB(l_pMemHash, CKeccak::EBITS_256 / 8);
+
+    if (CFSYS::File_Exists(l_cHdrFilePath.Get()))
+    {
+        if (l_cuP7Hdrfile.Open(l_cHdrFilePath.Get(), IFile::EOPEN | IFile::EACCESS_READ | IFile::ESHARE_READ))
         {
-            OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
-            l_eError = eErrorFileWrite;
+            uint64_t l_qwSize = l_cuP7Hdrfile.Get_Size();
+            char *l_pFileData = (char*)malloc((size_t)l_qwSize);
+            if (l_pFileData)
+            {
+                if (l_qwSize == l_cuP7Hdrfile.Read((tUINT8*)l_pFileData, (size_t)l_qwSize))
+                {
+                    l_cHash.UpdateB((const tUINT8*)l_pFileData, (size_t)l_qwSize);
+                    l_cHash.Get_HashB(l_pHddHash, CKeccak::EBITS_256 / 8);
+                }
+
+                free(l_pFileData);
+            }
+
+            l_cuP7Hdrfile.Close(FALSE);
         }
     }
 
-    l_cuP7Hdrfile.Close(TRUE);
+    if (0 != memcmp(l_pMemHash, l_pHddHash, CKeccak::EBITS_256 / 8))
+    {
+        if (m_bVerbose) OSPRINT(TM("INFO: File {%s} has been changed, regenerating!\n"), l_cHdrFilePath.Get());
+
+        if (l_cuP7Hdrfile.Open(l_cHdrFilePath.Get(), IFile::ECREATE | IFile::ESHARE_READ | IFile::EACCESS_WRITE))
+        {
+            if (l_cFileBody.size() != l_cuP7Hdrfile.Write((const tUINT8*)l_cFileBody.data(), l_cFileBody.size(), FALSE))
+            {
+                OSPRINT(TM("ERROR: Can't write file {%s}\n"), l_cHdrFilePath.Get());
+                l_eError = eErrorFileWrite;
+            }
+            l_cuP7Hdrfile.Close(TRUE);
+        }
+        else
+        {
+            OSPRINT(TM("ERROR: Can't open file {%s}\n"), l_cHdrFilePath.Get());
+            l_eError = eErrorFileWrite;
+        }
+    }
+    else
+    {
+        if (m_bVerbose) OSPRINT(TM("INFO: The file {%s} has not been modified!\n"), l_cHdrFilePath.Get());
+    }
 
     free(l_pBuffer);
     l_pBuffer = NULL;
@@ -1497,120 +1523,24 @@ eErrorCodes CpreManager::CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpo
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-eErrorCodes CpreManager::ParseDescriptionHeaderFile(tUINT32 &o_rSession, tUINT64 &o_rEpochTime, tUINT8 o_pSessionHash[CKeccak::EBITS_256 / 8])
+eErrorCodes CpreManager::ScanHash(const tXCHAR *i_pTxtHash, tUINT8 o_pSessionHash[CKeccak::EBITS_256 / 8])
 {
-    memset(o_pSessionHash, 0, CKeccak::EBITS_256 / 8);
-
-    CPFile    l_cuP7Hdrfile;
-    CWString  l_cHdrFilePath(m_pOutDir);
-    l_cHdrFilePath.Append(1, uP7_PREPREOCESSED_H);
-
-
-    if (!CFSYS::File_Exists(l_cHdrFilePath.Get()))
-    {
-        return eErrorFileOpen;
-    }
-
-    size_t      l_szData = 0;
-    char       *l_pData  = nullptr;
     eErrorCodes l_eError = eErrorNo;
+    const size_t  l_szHashSize = CKeccak::EBITS_256 / 8;
 
-    CPFile  l_cuP7Binfile;
-    if (l_cuP7Binfile.Open(l_cHdrFilePath.Get(), IFile::EOPEN | IFile::EACCESS_READ | IFile::ESHARE_READ))
+    for (size_t l_szI = 0; l_szI < l_szHashSize; l_szI++)
     {
-        l_szData  = (size_t)l_cuP7Binfile.Get_Size();
-        if (l_szData)
+        uint32_t l_uVal = 0;
+        
+        if (PStrScan(i_pTxtHash + l_szI * 2, TM("%02X"), &l_uVal))
         {
-            l_pData = (char*)malloc(l_szData + 1);
-            if (l_pData)
-            {
-                if (l_szData == l_cuP7Binfile.Read((tUINT8*)l_pData, l_szData))
-                {
-                    l_pData[l_szData] = 0; //end of the string
-                }
-                else
-                {
-                    l_eError = eErrorFileRead;
-                    l_szData = 0;
-                }
-            }
-            else
-            {
-                l_eError = eErrorMemAlloc;
-                l_szData = 0;
-            }
-        }
-
-        l_cuP7Binfile.Close(FALSE);
-    }
-    else
-    {
-        l_eError = eErrorFileOpen;
-    }
-
-
-    if (eErrorNo == l_eError)
-    {
-        char *l_pSessionId = strstr(l_pData, uP7_SESSION_TXT);
-        if (l_pSessionId)
-        {
-            if (!sscanf(l_pSessionId + strlen(uP7_SESSION_TXT), "%u;", &o_rSession))
-            {
-                l_eError = eErrorFileRead;
-            }
+            o_pSessionHash[l_szI] = (uint8_t)l_uVal;
         }
         else
         {
             l_eError = eErrorFileRead;
+            break;
         }
-    }
-
-    if (eErrorNo == l_eError)
-    {
-        char *l_pEposhTime = strstr(l_pData, uP7_EPOCHTIME_TXT);
-        if (l_pEposhTime)
-        {
-            uint64_t l_qwVal = 0;
-            if (sscanf(l_pEposhTime + strlen(uP7_EPOCHTIME_TXT), "%" PRIx64 ";", &l_qwVal))
-            {
-                o_rEpochTime =(tUINT64)l_qwVal;
-            }
-            else
-            {
-                l_eError = eErrorFileRead;
-            }
-        }
-        else
-        {
-            l_eError = eErrorFileRead;
-        }
-    }
-
-
-    if (eErrorNo == l_eError)
-    {
-        const size_t  l_szHashSize = CKeccak::EBITS_256 / 8;
-        char         *l_pTxtHash   = l_pData + l_szData - l_szHashSize*2;
-
-        for (size_t l_szI = 0; l_szI < l_szHashSize; l_szI++)
-        {
-            uint32_t l_uVal = 0;
-            if (sscanf(l_pTxtHash + l_szI * 2, "%02X", &l_uVal))
-            {
-                o_pSessionHash[l_szI] = (uint8_t)l_uVal;
-            }
-            else
-            {
-                l_eError = eErrorFileRead;
-                break;
-            }
-        }
-    }
-
-    if (l_pData)
-    {
-        free(l_pData);
-        l_pData = nullptr;
     }
 
     return l_eError;

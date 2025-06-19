@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -43,7 +42,7 @@ CProxyCpu::CProxyCpu(CWString               &i_rName,
                      IProxyClient           *i_pClient
                     )
     : m_cName(i_rName.Get())
-    , m_cObjState(eState::eSessionRecognition)
+    , m_eObjState(eState::eSessionRecognition)
     , m_bError(false)
     , m_bConvertEndianess(i_bConvertEndianess)
     , m_pP7Trace(i_pP7Trace)
@@ -138,7 +137,7 @@ CProxyCpu::~CProxyCpu()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
 {
-    if (eState::eError == m_cObjState)
+    if (eState::eError == m_eObjState)
     {
         return false;
     }
@@ -153,7 +152,7 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
         return false;
     }
 
-    if (eState::eProcessing == m_cObjState)
+    if (eState::eProcessing == m_eObjState)
     {
         //fill tail
         while (    (l_szData)
@@ -180,7 +179,12 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
                     m_pTailHdr->wSize      = ntohs(m_pTailHdr->wSize);
                 }
 
-                if (m_pTailHdr->uSessionId == m_uSessionId)
+
+                if (    (m_pTailHdr->uSessionId == m_uSessionId)
+                     && (m_pTailHdr->wSize > 0) 
+                     && (m_pTailHdr->wSize < uP7_CPU_MAX_PACKET_SIZE)
+                     && (m_pTailHdr->bType < uP7packetsMax)
+                   )
                 {
                     if (m_pTailHdr->wSize > m_szTail)
                     {
@@ -196,13 +200,13 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
                     }
 
 
-                    uERROR(TM("[CPU#%d] Steam discontinuity is detected, trying to resync"), (int)m_bId); 
+                    uERROR(TM("[CPU#%d] Stream discontinuity is detected, trying to resync ... "), (int)m_bId);
 
                     m_szTail     = 0;
                     m_szTailRest = 0;
 
-                    m_cObjState  = eState::eSessionResync;
-                    l_bReturn    = SyncronizeSession(i_pBuffer->pData, i_pBuffer->szUsed);
+                    m_eObjState  = eState::eSessionResync;
+                    l_bReturn    = SynchronizeSession(i_pBuffer->pData, i_pBuffer->szUsed);
                     goto l_lblExit;
                 }
             }
@@ -241,7 +245,12 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
                 pHdr->wSize      = ntohs(pHdr->wSize);
             }
 
-            if (pHdr->uSessionId == m_uSessionId)
+            if (    (pHdr->uSessionId == m_uSessionId)
+                 && (pHdr->wSize > 0) 
+                 && (pHdr->wSize < uP7_CPU_MAX_PACKET_SIZE)
+                 && (pHdr->bType < uP7packetsMax)
+               )
+
             {
                 if (l_szData >= pHdr->wSize)
                 {
@@ -274,10 +283,10 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
                     pHdr->wSize      = ntohs(pHdr->wSize);
                 }
 
-                uERROR(TM("[CPU#%d] Steam discontinuity is detected, trying to resync"), (int)m_bId); 
+                uERROR(TM("[CPU#%d] Stream discontinuity is detected, trying to resync ..."), (int)m_bId);
 
-                m_cObjState = eState::eSessionResync;
-                l_bReturn = SyncronizeSession(l_pData, l_szData);
+                m_eObjState = eState::eSessionResync;
+                l_bReturn = SynchronizeSession(l_pData, l_szData);
                 goto l_lblExit;
             }
 
@@ -302,11 +311,11 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
         }
 
     }
-    else if (    (eState::eSessionRecognition == m_cObjState)
-              || (eState::eSessionResync == m_cObjState)
+    else if (    (eState::eSessionRecognition == m_eObjState)
+              || (eState::eSessionResync == m_eObjState)
             )
     {
-        l_bReturn = SyncronizeSession(l_pData, l_szData);
+        l_bReturn = SynchronizeSession(l_pData, l_szData);
     }
 
     
@@ -320,7 +329,7 @@ l_lblExit:
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
+bool CProxyCpu::SynchronizeSession(const uint8_t *i_pData, size_t i_szData)
 {
     size_t        l_szOffset       = 0;
     stuP7baseHdr *l_pHdr           = nullptr;
@@ -339,7 +348,7 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
         return l_bResult;
     }
 
-    if (eState::eSessionRecognition == m_cObjState)
+    if (eState::eSessionRecognition == m_eObjState)
     {
         m_qwUnknownData += i_szData;
     }
@@ -360,7 +369,7 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
              && (l_pDesc->uSessionCrc7 == l_uPacketSIdCrc7)
            )
         {
-            if (eState::eSessionRecognition == m_cObjState)
+            if (eState::eSessionRecognition == m_eObjState)
             {
                 l_uSessionId     = l_uPacketSId;  
                 l_uSessionIdCrc7 = l_uPacketSIdCrc7;
@@ -379,6 +388,7 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
 
         if (l_bResult)
         {
+            bool   l_bSuccess   = true;
             size_t l_uProcessed = l_szOffset;
 
             //process data
@@ -399,28 +409,48 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
                     l_uPacketSize = ntohs(l_pHdr->wSize);
                 }
 
-                if (l_uSessionId == l_uPacketSId)
+                if ((l_uPacketSize <= 0) || (l_uPacketSize >= uP7_CPU_MAX_PACKET_SIZE))
+                {
+                    uERROR(TM("[CPU#%d] Packet size is wrong %u!"), (int)m_bId, l_uPacketSize); 
+                    l_bSuccess = false;
+                }
+
+                if (    (l_uSessionId == l_uPacketSId)
+                     && (l_bSuccess)
+                   )
                 {
                     if ((m_szTail - l_uProcessed) >= l_uPacketSize)
                     {
-                        uint64_t l_qwMask = 1ull << l_pHdr->bType;
-                        for (size_t l_szI = 0; l_szI < uP7_CPU_STREAMS_COUNT; l_szI++)
+                        if (l_pHdr->bType < uP7packetsMax)
                         {
-                            if (l_qwMask & m_cStreams[l_szI].qwPacketsMap)
+                            uint64_t l_qwMask = 1ull << l_pHdr->bType;
+
+                            for (size_t l_szI = 0; l_szI < uP7_CPU_STREAMS_COUNT; l_szI++)
                             {
-                                AddPacket(m_cStreams[l_szI], l_pHdr);
+                                if (l_qwMask & m_cStreams[l_szI].qwPacketsMap)
+                                {
+                                    AddPacket(m_cStreams[l_szI], l_pHdr);
+                                }
                             }
+
+                            l_uProcessed  += l_uPacketSize;
+                        } 
+                        else 
+                        {
+                            uERROR(TM("[CPU#%d] Wrong Stream mask received! reinitialize session!"), (int)m_bId); 
+                            l_bSuccess = false;
                         }
 
-                        l_uProcessed  += l_uPacketSize;
                     }
                     else
                     {
                         break;
                     }
                 }
-                else
+
+                if (!l_bSuccess)
                 {
+                    uERROR(TM("[CPU#%d] Drop packets!"), (int)m_bId); 
                     ReleaseStreamsPackets();
                     l_bResult = false;
                     break;
@@ -432,16 +462,16 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
                 l_szOffset = l_uProcessed;
                 break;
             }
-        }
+        }//if (l_bResult)
 
         l_szOffset++;
-    }
+    }//while ((m_szTail - l_szOffset) >= sizeof(stuP7baseHdr))
 
 
 
     if (l_bResult)
     {
-        if (eState::eSessionRecognition == m_cObjState)
+        if (eState::eSessionRecognition == m_eObjState)
         {
             l_bResult = ApplyDescription(l_uSessionId);
         }
@@ -450,7 +480,7 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
         {
             m_uSessionId = l_uSessionId;
             m_uCrc7      = l_uSessionIdCrc7;
-            m_cObjState = eState::eProcessing;
+            m_eObjState = eState::eProcessing;
 
             //process data
             PROCESS_STREAMS_DATA();
@@ -486,13 +516,13 @@ bool CProxyCpu::SyncronizeSession(const uint8_t *i_pData, size_t i_szData)
 
     if (!l_bResult)
     {
-        if (    (eState::eSessionRecognition == m_cObjState)
+        if (    (eState::eSessionRecognition == m_eObjState)
              && (CPU_MAX_SESSION_UNK_SIZE <= m_qwUnknownData)
            )
         {
             uERROR(TM("[CPU#%d] Can't recognize the session ID, max attempts is reached"), (int)m_bId); 
             uERROR(TM("[CPU#%d] Perhaps session file (*.up7) is missing?"), (int)m_bId); 
-            m_cObjState = eState::eError;
+            m_eObjState = eState::eError;
         }
         else
         {

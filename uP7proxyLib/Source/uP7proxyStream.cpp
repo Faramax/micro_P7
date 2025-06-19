@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -122,7 +121,7 @@ bool CProxyStream::Maintain()
        )
 
     {
-        uERROR(TM("[CPU#%d] Synchronization timeout. Timestamps won't be synchronized with HOST!"), (int)m_bId);
+        uWARNING(TM("[CPU#%d] Synchronization timeout. Timestamps won't be synchronized with HOST!"), (int)m_bId);
         Start();
     }
     else if (eStateReady == m_eState)
@@ -133,21 +132,17 @@ bool CProxyStream::Maintain()
             double l_dbCpuDuration  = (double)(m_iTime->GetTime() - m_qwCpuTimeDriftCalibration); 
             double l_dbHostDuration = (double)(GetPerformanceCounter() - m_qwHostTimeDriftCalibration);   
 
-            //uINFO(TM("[CPU#%d] Host duration %f, CPU Duration %f, Host roundtrip %f"), (int)m_bId ,
-            //    (double)l_qwHostDuration / (double)m_qwHostFreq,
-            //    (double)l_qwCpuDuration / (double)m_qwCpuFreq,
-            //    (double)l_qwRoundTrip / (double)m_qwHostFreq);
-
             //converting to CPU timer frequency
             l_dbHostDuration = l_dbHostDuration * (double)m_qwCpuFreq / (double)m_qwHostFreq;
 
 
-            //Expo. fitrer: y[k] =y[k-1] + A*(x[k] - y[k-1]); where A = (1-coef), coef=[0, 0.5, 0.9, 0.95, 0.98]
-            //coef=0.95 to smooth adaptation and filer out non RT fluctuations
+            //Expo. filter: y[k] = y[k-1] + (1-A)*(x[k] - y[k-1]); where A = (1-coef), coef=[0, 0.5, 0.9, 0.95, 0.98]
+            //coef=0.95 to smooth adaptation and filer out non RT fluctuations, but with significant delay
+            //coef=0.5 fast enough, with small delay, more applicable for small clock drift 
             m_llTimeCorrection = (int64_t)(   (double)m_llTimeCorrection 
-                                            + (1.0-0.95)*(   ((double)l_dbHostDuration - (double)l_dbCpuDuration) 
-                                                           - (double)m_llTimeCorrection
-                                                         )
+                                            + (1.0f-0.5f)*(   ((double)l_dbHostDuration - (double)l_dbCpuDuration) 
+                                                             - (double)m_llTimeCorrection
+                                                           )
                                           );
             
 
@@ -158,9 +153,18 @@ bool CProxyStream::Maintain()
                 m_llTimeCorrection = 0;
             }
 
+            //uINFO(TM("[CPU#%d] Host duration %f, CPU Duration %f, Host roundtrip %f"), (int)m_bId ,
+            //    (double)l_qwHostDuration / (double)m_qwHostFreq,
+            //    (double)l_qwCpuDuration / (double)m_qwCpuFreq,
+            //    (double)l_qwRoundTrip / (double)m_qwHostFreq);
+            //printf("Correction: H%.04f R%.04f C%.03f\n", 
+            //       (double)l_dbHostDuration / (double)m_qwHostFreq,
+            //       (double)l_dbCpuDuration / (double)m_qwCpuFreq,
+            //       ((double)m_llTimeCorrection * 1000.0)/(double)m_qwCpuFreq);
+
             if (    (m_pP7Tel)
                  && (P7TELEMETRY_INVALID_ID_V2 != m_sTelTimeCorrection)
-                )
+               )
             {
                 m_pP7Tel->Add(m_sTelTimeCorrection, ((double)m_llTimeCorrection * 1000.0)/(double)m_qwCpuFreq);
             }

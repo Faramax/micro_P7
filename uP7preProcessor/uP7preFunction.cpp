@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -1145,6 +1144,8 @@ CFuncModule::CFuncModule(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_p
         return;
     }
 
+    memset(&m_sModule, 0, sizeof(m_sModule));
+
     m_pName = GetParameterStrValue(m_cArgs[m_pDesc->pArgs[eRegModNameIndex]]);
     m_pVerbosity = GetParameterRawValue(m_cArgs[m_pDesc->pArgs[eRegModLevelIndex]]);
     if (eErrorNo == m_eError)
@@ -1160,8 +1161,8 @@ CFuncModule::CFuncModule(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_p
         m_sModule.eVerbosity        = EP7TRACE_LEVEL_TRACE;
         m_sModule.wModuleID         = 0;
 
-        strncpy(m_sModule.pName, m_pName, P7TRACE_THREAD_NAME_LENGTH);
-        m_sModule.pName[P7TRACE_THREAD_NAME_LENGTH - 1] = 0;
+        strncpy(m_sModule.pName, m_pName, P7TRACE_MODULE_NAME_LENGTH);
+        m_sModule.pName[P7TRACE_MODULE_NAME_LENGTH - 1] = 0;
     }
 }
 

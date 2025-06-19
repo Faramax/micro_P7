@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -125,26 +124,37 @@ CuP7proxy::CuP7proxy(const tXCHAR *i_pArgs, const tXCHAR *i_puP7Dir, bool &o_rEr
                 {
                     if (l_stHdr.uVersion == SESSION_ID_FILE_VER)
                     {
-                        stPreProcessorFile *l_pFile = m_cFiles.Find(l_stHdr.uSessionId);
-                        if (!l_pFile)
+                        if (l_stHdr.uSize == sizeof(stuP7SessionFileHeader))
                         {
-                            m_cFiles.Push(new stPreProcessorFile(l_pFileName, l_stHdr.uSessionId, l_stHdr.uCrc7), 
-                                          l_stHdr.uSessionId);
-                            l_pFileName = NULL;
-                            l_szCount ++;
+                            stPreProcessorFile *l_pFile = m_cFiles.Find(l_stHdr.uSessionId);
+                            if (!l_pFile)
+                            {
+                                m_cFiles.Push(new stPreProcessorFile(l_pFileName, l_stHdr.uSessionId, l_stHdr.uCrc7), 
+                                              l_stHdr.uSessionId);
+                                l_pFileName = NULL;
+                                l_szCount ++;
+                            }
+                            else
+                            {
+                                uERROR(TM("Session ID collision for files: {%s}<>{%s}"), 
+                                       l_pFileName->Get(), 
+                                       l_pFile->pFileName->Get());
+                            }
                         }
                         else
                         {
-                            uERROR(TM("Session ID collision for files: {%s}<>{%s}"), 
-                                   l_pFileName->Get(), 
-                                   l_pFile->pFileName->Get());
+                            uERROR(TM("Session file header size is unexpected: {%s} %u!=%u"), 
+                                l_pFileName->Get(), 
+                                l_stHdr.uSize,
+                                (uint32_t)sizeof(stuP7SessionFileHeader));
                         }
                     }
                     else
                     {
-                        uERROR(TM("Session file version is unsupported: {%s} ver:%u"), 
+                        uERROR(TM("Session file version is unsupported: {%s} ver:%u, expected version:%u"), 
                                l_pFileName->Get(), 
-                               l_stHdr.uVersion);
+                               l_stHdr.uVersion,
+                               SESSION_ID_FILE_VER);
                     }
                 }
                 else
@@ -526,7 +536,7 @@ void CuP7proxy::ProcRoutine()
                 }
                 else
                 {
-                    uCRITICAL(TM("Unitialized cpu#%d, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
+                    uCRITICAL(TM("cpu#%d is not initialized, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
                 }
             }
         }
@@ -642,7 +652,7 @@ void CuP7proxy::ProcRoutine()
                     }
                     else
                     {
-                        uCRITICAL(TM("Unitialized cpu#%d, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
+                        uCRITICAL(TM("cpu#%d is not initialized, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
                     }
                 }
             }

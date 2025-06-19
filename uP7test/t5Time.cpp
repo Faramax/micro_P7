@@ -1,18 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
 #include <atomic>
+#include <inttypes.h>
 
 #define T5_DURATION_MS 60000
 
@@ -21,23 +21,20 @@ class C5TimeShift : public IuP7Time
 {
     uint64_t m_qwFreq;
     uint64_t m_qwTimeStart;
-    uint64_t m_qwTicksPerSecondShift;
+    uint64_t m_qwMsPerSecondShift;
     std::atomic<int> m_iRc;
 public:
     C5TimeShift(uint64_t i_qwMsPerSecondShift)
         : m_qwFreq(GetPerformanceFrequency())
         , m_qwTimeStart(GetPerformanceCounter())
-        , m_qwTicksPerSecondShift(0)
+        , m_qwMsPerSecondShift(i_qwMsPerSecondShift)
         , m_iRc(1)
     {
-        m_qwTicksPerSecondShift = i_qwMsPerSecondShift * m_qwFreq / 1000ull;
     }
 
     uint64_t GetClockValue() //artificially shift time
     {
-        double l_dbDurationSec = (double)(GetPerformanceCounter() - m_qwTimeStart) / (double)m_qwFreq;
-        return GetPerformanceCounter() + (uint64_t)(l_dbDurationSec * (double)m_qwTicksPerSecondShift);
-        return GetPerformanceCounter();
+        return GetTime();
     }
 
     virtual uint64_t GetFrequency()
@@ -47,7 +44,7 @@ public:
 
     virtual uint64_t GetTime()
     {
-        return GetClockValue();
+        return GetPerformanceCounter() + (uint64_t)(((GetPerformanceCounter() - m_qwTimeStart) * m_qwMsPerSecondShift) / 1000ull);
     }
 
     virtual int32_t Add_Ref() 
@@ -77,14 +74,18 @@ class CT5P7Sink: public CClTextSink
 {
     size_t      m_szErrors;
     std::mutex  m_cLock;
-    uint64_t    m_qwStartTime;
-    uint64_t    m_qwEndtTime;
+    uint64_t    m_qwCpuStartTime;
+    uint64_t    m_qwCpuEndtTime;
+    uint64_t    m_qwHostStartTime;
+    uint64_t    m_qwHostEndtTime;
 public:
     CT5P7Sink()
     {
-        m_szErrors    = 0;
-        m_qwStartTime = 0ul;
-        m_qwEndtTime  = 0ull;
+        m_szErrors        = 0;
+        m_qwCpuStartTime  = 0ull;
+        m_qwCpuEndtTime   = 0ull;
+        m_qwHostStartTime = 0ull;
+        m_qwHostEndtTime  = 0ull;
     }
 
     virtual ~CT5P7Sink()
@@ -108,12 +109,12 @@ public:
         m_cLock.lock();
         if (0 != PStrICmp(TM("MicroP7"), i_rRawLog.pChannel))
         {
-            if (!m_qwStartTime)
+            if (!m_qwCpuStartTime)
             {
-                m_qwStartTime = i_rRawLog.qwRawTime;
+                m_qwCpuStartTime  = i_rRawLog.qwRawTime;
             }
 
-            m_qwEndtTime = i_rRawLog.qwRawTime;
+            m_qwCpuEndtTime  = i_rRawLog.qwRawTime;
         }
         else 
         {
@@ -136,10 +137,22 @@ public:
         return ECLIENT_STATUS_OK;
     }
 
-    uint64_t GetDurationMilliseconds()
+    void updateHostTime()
+    {
+        if (!m_qwHostStartTime)
+        {
+            m_qwHostStartTime = GetPerformanceCounter();
+        }
+
+        m_qwHostEndtTime = GetPerformanceCounter();
+    }
+
+    int64_t GetDriftMilliseconds()
     {
         m_cLock.lock();
-        uint64_t l_qwReturn = (m_qwEndtTime - m_qwStartTime) / 10000;
+        int64_t dbHostDuration = (int64_t)((m_qwHostEndtTime - m_qwHostStartTime)*1000ull/GetPerformanceFrequency());
+        int64_t dbCpuDuration = (int64_t)((m_qwCpuEndtTime - m_qwCpuStartTime) / 10000ull);
+        int64_t l_qwReturn = dbHostDuration - dbCpuDuration;
         m_cLock.unlock();
 
         return l_qwReturn;
@@ -190,7 +203,8 @@ bool     t5sendPacket(void *i_pCtx, enum euP7packetRank i_eRank, const struct st
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool t5Time(const tXCHAR *i_pSessionFolder)
 {
-    C5TimeShift*l_pTimeShift = new C5TimeShift(1);
+    uint64_t    l_qwDriftMs  = 1;
+    C5TimeShift*l_pTimeShift = new C5TimeShift(l_qwDriftMs);
     CT5P7Sink   l_cP7Sink; 
     uint64_t    l_qwAdd = (uint64_t)(&l_cP7Sink);
     tXCHAR      l_pArgs[4096];
@@ -251,12 +265,19 @@ bool t5Time(const tXCHAR *i_pSessionFolder)
         stReadContext l_stReadCtx = {0};
         l_stReadCtx.pFifo = l_iFifo;
         uint32_t l_uTimeStart = GetTickCount();
+        uint32_t uit = 0;
 
         while (CTicks::Difference(GetTickCount(), l_uTimeStart) < T5_DURATION_MS)
         {
             uP7TRC(49, l_hModule1, "T5 test message", 0);
+            l_cP7Sink.updateHostTime();
             uP7ProcessIncomingData(&l_stReadCtx, 5);
+            if (uit++ % 100 == 0)
+            {
+                printf("%d%% ", (CTicks::Difference(GetTickCount(), l_uTimeStart) * 100) / T5_DURATION_MS);
+            }
         }
+        printf("\n");
     });
 
 
@@ -284,12 +305,15 @@ bool t5Time(const tXCHAR *i_pSessionFolder)
         return false;
     }
 
-    uint64_t qwTestDuration = l_cP7Sink.GetDurationMilliseconds();
-    int32_t  iDrift = (int32_t)qwTestDuration - T5_DURATION_MS;
+    int64_t qwDrift = l_cP7Sink.GetDriftMilliseconds();
 
-    printf("t5Time: drift: %d\n", iDrift);
+    printf("t5Time: drift: %" PRId64 "ms for duration %ds, with artificially created drift %dms\n", 
+           qwDrift,
+           T5_DURATION_MS / 1000,
+           (uint32_t)(T5_DURATION_MS * l_qwDriftMs / 1000ull)
+        );
 
-    if (abs(iDrift) > 10)
+    if (abs(qwDrift) > 3)
     {
         return false;
     }

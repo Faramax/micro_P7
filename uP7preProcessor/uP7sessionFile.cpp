@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -43,6 +42,19 @@ CSessionFile::CSessionFile(const tXCHAR *i_pName)
                     else
                     {
                         m_pHdr = (stuP7SessionFileHeader *)m_pData;
+
+                        if (m_pHdr->uVersion != SESSION_ID_FILE_VER)
+                        {
+                            OSPRINT(TM("WARNING: Current session file {%s} has wrong version 0x%08X!=0x%08X, ignoring\n"), 
+                                    i_pName, m_pHdr->uVersion, SESSION_ID_FILE_VER);
+                            m_eError = eErrorFileOpen;
+                        }
+                        else if (m_pHdr->uSize != sizeof(stuP7SessionFileHeader))
+                        {
+                            OSPRINT(TM("WARNING: Current session file {%s} has unexpected size %u!=%zu, ignoring\n"), 
+                                    i_pName, m_pHdr->uSize, sizeof(stuP7SessionFileHeader));
+                            m_eError = eErrorFileOpen;
+                        }
                     }
                 }
                 else
@@ -71,9 +83,9 @@ CSessionFile::CSessionFile(const tXCHAR *i_pName)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-CSessionFile::CSessionFile(CBList<CpreFile*> *i_pFiles, tUINT32  i_uSession, uint64_t i_qwEpochTime)
+CSessionFile::CSessionFile(CBList<CpreFile*> *i_pFiles, tUINT32  i_uSession, tUINT8 i_bCrc7, uint64_t i_qwEpochTime)
     : m_szData(0)
-    , m_szDataMax(1024u*1024u)
+    , m_szDataMax(256u*1024u)
     , m_pData((tUINT8*)malloc(m_szDataMax)) 
     , m_pHdr((stuP7SessionFileHeader *)m_pData)
     , m_eError(eErrorNo)
@@ -91,6 +103,8 @@ CSessionFile::CSessionFile(CBList<CpreFile*> *i_pFiles, tUINT32  i_uSession, uin
     m_pHdr->qwTimeStamp = i_qwEpochTime;
     m_pHdr->uSessionId  = i_uSession;
     m_pHdr->uVersion    = SESSION_ID_FILE_VER;
+    m_pHdr->uCrc7       = i_bCrc7;
+    m_pHdr->uSize       = (uint32_t)sizeof(stuP7SessionFileHeader);
 
     m_szData = sizeof(stuP7SessionFileHeader);
 
@@ -103,6 +117,8 @@ CSessionFile::CSessionFile(CBList<CpreFile*> *i_pFiles, tUINT32  i_uSession, uin
         CpreFile *l_pFile = i_pFiles->Get_Data(l_pFileEl);
         if (l_pFile)
         {
+            //OSPRINT(TM(">>+{%s}\n"), l_pFile->GetOsPath());
+
             CBList<CFuncRoot*> &l_rFunctions = l_pFile->GetFunctions();
 
             pAList_Cell l_pFuncEl = NULL;
@@ -171,7 +187,8 @@ eErrorCodes CSessionFile::SetSession(uint32_t i_uSession, uint8_t i_uSessionCrc7
     m_pHdr->uSessionId  = i_uSession;
     m_pHdr->uCrc7       = i_uSessionCrc7;
     m_pHdr->uFlags      = 0;
-    
+    m_pHdr->uSize       = (uint32_t)sizeof(stuP7SessionFileHeader);
+
 
     return m_eError;
 }

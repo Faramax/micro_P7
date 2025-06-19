@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +34,7 @@
 #define uP7_SHARED_TRACE     TM("up7TraceChannel")
 #define uP7_SHARED_TELEMETRY TM("up7TelemetryChannel")
 
-#define SESSION_ID_FILE_VER  0x10100000
+#define SESSION_ID_FILE_VER  0x10200000
 
 /*! Session file header */
 struct stuP7SessionFileHeader
@@ -45,6 +44,7 @@ struct stuP7SessionFileHeader
     uint64_t qwTimeStamp;
     uint32_t uCrc7 :7;
     uint32_t uFlags:25;
+    uint32_t uSize; 
 };
 
 
@@ -194,7 +194,7 @@ public:
      * @param i_szFifoLen [in] FIFOs size in bytes (IuP7stream  *&o_iStream). Min value 16384 bytes.
      * @param i_bFifoBiDirectional [in] flag to specify that communication with CPU is bidirectional and proxy can use 
      * it to send control data to CPU like disable telemetry counter, change verbosity, etc.
-     * If fifo is bidirections - set to "true", otherwise - "false"
+     * If fifo is bidirectional - set to "true", otherwise - "false"
      * @param o_iFifo [out] FIFO object to be used for CPU communication. 
      *                N.B.: Please do not forget to call o_iFifo->Release() right after UnRegisterCpu();
      * @return true - success, false - error
@@ -217,7 +217,7 @@ public:
      * @param i_szFifoLen [in] FIFOs size in bytes (IuP7stream  *&o_iStream). Min value 16384 bytes.
      * @param i_bFifoBiDirectional [in] flag to specify that communication with CPU is bidirectional and proxy can use 
      * it to send control data to CPU like disable telemetry counter, change verbosity, etc.
-     * If fifo is bidirections - set to "true", otherwise - "false"
+     * If fifo is bidirectional - set to "true", otherwise - "false"
      * @param o_iFifo [out] FIFO object to be used for CPU communication. 
      *                N.B.: Please do not forget to call o_iFifo->Release() right after UnRegisterCpu();
      * @return true - success, false - error

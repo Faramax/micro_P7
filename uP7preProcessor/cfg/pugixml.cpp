@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -3433,6 +3432,29 @@ namespace pugi
     #endif
     }
 
+    long long xml_attribute::as_int64() const
+    {
+        if (!_attr || !_attr->value) return 0;
+
+#ifdef PUGIXML_WCHAR_MODE
+        return (long long)wcstoll(_attr->value, 0, 10);
+#else
+        return (long long)strtoll(_attr->value, 0, 10);
+#endif
+    }
+
+    unsigned long long xml_attribute::as_uint64() const
+    {
+        if (!_attr || !_attr->value) return 0;
+
+#ifdef PUGIXML_WCHAR_MODE
+        return (unsigned long long)wcstoull(_attr->value, 0, 10);
+#else
+        return (unsigned long long)strtoull(_attr->value, 0, 10);
+#endif
+    }
+
+
     double xml_attribute::as_double() const
     {
         if (!_attr || !_attr->value) return 0;
@@ -3564,6 +3586,38 @@ namespace pugi
         return set_value(buf);
     #endif
     }
+
+
+    bool xml_attribute::set_value64(long long rhs)
+    {
+        char buf[128];
+        sprintf(buf, "%lld", rhs);
+
+#ifdef PUGIXML_WCHAR_MODE
+        char_t wbuf[128];
+        widen_ascii(wbuf, buf);
+
+        return set_value(wbuf);
+#else
+        return set_value(buf);
+#endif
+    }
+
+    bool xml_attribute::set_value64(unsigned long long rhs)
+    {
+        char buf[128];
+        sprintf(buf, "%llu", rhs);
+
+#ifdef PUGIXML_WCHAR_MODE
+        char_t wbuf[128];
+        widen_ascii(wbuf, buf);
+
+        return set_value(wbuf);
+#else
+        return set_value(buf);
+#endif
+    }
+
 
     bool xml_attribute::set_value(double rhs)
     {

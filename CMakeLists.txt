@@ -1,6 +1,21 @@
-cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 project(microP7)
+
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# OPTIONS:
+set(BUILD_UP7_LIB          ON CACHE INTERNAL "build uP7 library")
+set(BUILD_UP7_P7_LIB       ON CACHE INTERNAL "build P7 library")
+set(BUILD_UP7_PROXY        ON CACHE INTERNAL "build uP7 proxy library")
+set(BUILD_UP7_PREPROCESSOR ON CACHE INTERNAL "build uP7 preprocessor")
+set(BUILD_UP7_TEST         ON CACHE INTERNAL "build uP7 tests")
+set(BUILD_UP7_EXAMPLE      ON CACHE INTERNAL "build uP7 example")
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 include(CheckCXXCompilerFlag)
 include(CheckCCompilerFlag)
@@ -66,6 +81,7 @@ else()
     enable_cpp_c_compiler_flag_if_supported("-Wno-long-long")
     enable_cpp_c_compiler_flag_if_supported("-Wno-missing-field-initializers")
     enable_cpp_c_compiler_flag_if_supported("-Wno-unknown-pragmas")
+    enable_cpp_c_compiler_flag_if_supported("-Wno-address-of-packed-member")
     
     macro(set_ide_folder _project_name)
     endmacro()
@@ -73,23 +89,94 @@ endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
+
+if(BUILD_UP7_TEST OR BUILD_UP7_EXAMPLE)
+    if (NOT BUILD_UP7_LIB)
+        message("WARNING: require to activate up7")
+        SET(BUILD_UP7_LIB ON CACHE INTERNAL "up7")
+    endif()
+    if (NOT BUILD_UP7_P7_LIB)
+        message("WARNING: require to activate p7")
+        SET(BUILD_UP7_P7_LIB ON CACHE INTERNAL "p7")
+    endif()
+    if (NOT BUILD_UP7_PROXY)
+        message("WARNING: require to activate up7 proxy")
+        SET(BUILD_UP7_PROXY ON CACHE INTERNAL "proxy")
+    endif()
+
+    if (NOT BUILD_UP7_PREPROCESSOR)
+        message("WARNING: require to activate up7 preprocessor")
+        SET(BUILD_UP7_PREPROCESSOR ON CACHE INTERNAL "proxy")
+    endif()
+endif()
+
+if(BUILD_UP7_PROXY)
+    if (NOT BUILD_UP7_P7_LIB)
+        message("WARNING: require to activate p7")
+        SET(BUILD_UP7_P7_LIB ON CACHE INTERNAL "p7")
+    endif()
+endif()
+
+
 if(uP7_EXTERNAL_INTEGRATION)
 else()
     SET(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/_Build_)
 endif()
 
-if (TARGET p7)
-    #message("P7 target is already existing, scipping local one")
-else()
-    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/P7lib")
-       add_subdirectory(P7lib)
+if (BUILD_UP7_P7_LIB)
+    if (TARGET p7)
+        message("INFO: P7 target is already existing, scipping local one")
     else()
-        message(FATAL_ERROR "Can't find P7 library!")
+        if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/P7lib")
+           add_subdirectory(P7lib)
+        else()
+            message(FATAL_ERROR "Can't find P7 library!")
+        endif()
+    endif()
+else()
+    set(PATH_P7_API ${CMAKE_CURRENT_SOURCE_DIR}/P7lib/Headers CACHE INTERNAL "")
+    set(PATH_SHARED ${CMAKE_CURRENT_SOURCE_DIR}/P7lib/Shared CACHE INTERNAL "")
+
+    if(WIN32)
+        set(PATH_SHARED_PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/P7lib/Shared/Platforms/Windows_x86 CACHE INTERNAL "")
+    else()
+        set(PATH_SHARED_PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/P7lib/Shared/Platforms/Linux_x86 CACHE INTERNAL "")
     endif()
 endif()
 
-add_subdirectory(uP7lib)
-add_subdirectory(uP7proxyLib)
-add_subdirectory(uP7preProcessor)
-add_subdirectory(uP7test)
-add_subdirectory(uP7example)
+
+#message("INFO: BUILD_UP7_P7_LIB:${BUILD_UP7_P7_LIB}")
+#message("INFO: BUILD_UP7_LIB:${BUILD_UP7_LIB}")
+#message("INFO: BUILD_UP7_PROXY:${BUILD_UP7_PROXY}")
+#message("INFO: BUILD_UP7_PREPROCESSOR:${BUILD_UP7_PREPROCESSOR}")
+#message("INFO: BUILD_UP7_TEST:${BUILD_UP7_TEST}")
+#message("INFO: BUILD_UP7_EXAMPLE:${BUILD_UP7_EXAMPLE}")
+
+
+if (BUILD_UP7_LIB)
+    add_subdirectory(uP7lib)
+else()
+    set(PATH_UP7_API ${CMAKE_CURRENT_SOURCE_DIR}/uP7lib/Headers CACHE INTERNAL "")
+    set(PATH_UP7_LIB ${CMAKE_CURRENT_SOURCE_DIR}/uP7lib/Source CACHE INTERNAL "")
+    set(PATH_UP7_LIB ${CMAKE_CURRENT_SOURCE_DIR}/uP7lib/Source CACHE INTERNAL "")
+    set(PATH_UP7_PLATFORM ${CMAKE_CURRENT_SOURCE_DIR}/uP7lib/Platforms/x86 CACHE INTERNAL "")
+endif()
+
+if (BUILD_UP7_PROXY)
+    add_subdirectory(uP7proxyLib)
+else()
+    set(PATH_UP7_PROXY_API ${CMAKE_CURRENT_SOURCE_DIR}/uP7proxyLib/Headers CACHE INTERNAL "")
+    set(PATH_UP7_PROXY_LIB ${CMAKE_CURRENT_SOURCE_DIR}/uP7proxyLib/Source CACHE INTERNAL "")
+endif()
+
+if (BUILD_UP7_PREPROCESSOR)
+    add_subdirectory(uP7preProcessor)
+endif()
+
+if (BUILD_UP7_TEST)
+    add_subdirectory(uP7test)
+endif()
+
+if (BUILD_UP7_EXAMPLE)
+    add_subdirectory(uP7example)
+endif()

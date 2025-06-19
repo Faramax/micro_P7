@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //http://www.codeproject.com/Articles/207464/Exception-Handling-in-Visual-Cplusplus
@@ -74,7 +73,7 @@ static void __cdecl ChSignalHandler(int i_iSignal)
 
 ////////////////////////////////////////////////////////////////////////////////
 //ChUnhandledExceptionFilter
-static LONG WINAPI ChUnhandledExceptionFilter(__in struct _EXCEPTION_POINTERS *i_pException)
+static LONG WINAPI ChUnhandledExceptionFilter(struct _EXCEPTION_POINTERS *i_pException)
 {
     if (g_stContext.iProcessed)
     {
@@ -215,11 +214,12 @@ static tBOOL ChInstallPrivate()
 
     _set_purecall_handler(ChPurecallHandler);
 
+#if !defined(__GNUC__) || defined(__clang__)
     _set_new_mode(1);
     _set_new_handler(ChMemoryAllocationHandler);
 
     _set_invalid_parameter_handler(ChInvalidParameterHandler);
-    
+#endif
     _CrtSetReportMode(_CRT_ERROR, 0);   
     _CrtSetReportMode(_CRT_ASSERT, 0);
 

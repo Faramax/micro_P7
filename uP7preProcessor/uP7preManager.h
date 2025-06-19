@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2023 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_MANAGER_H
@@ -78,21 +77,32 @@ public:
     tBOOL           SetReadOnlyFile(const tXCHAR *i_pName);
     tBOOL           SetExcludedFile(const tXCHAR *i_pName);
 
-    int             Process();
+    int             Process(Cfg::INode *i_pFiles);
     eErrorCodes     ScanFunctions();
     tBOOL           SaveHashes(Cfg::INode *i_pFiles);
 private:
-    eErrorCodes     CreateDescriptionHeaderFile(tUINT32      i_uSession, 
-                                                tUINT8       i_uSessionCrc7,  
-                                                tUINT64      i_qwEpochTime,  
-                                                const tUINT8 i_pHash[CKeccak::EBITS_256 / 8],
-                                                tBOOL        i_bUpdate
+    void            SortFilesByNames();
+
+    eErrorCodes     CreateDescriptionHeaderFile(tUINT32  i_uSession, 
+                                                tUINT8   i_uSessionCrc7,  
+                                                tUINT64  i_qwEpochTime
                                                );
-    eErrorCodes     CreateIDsHeaderFile(tUINT32 i_uSession, tUINT64 i_qwEpochTime, tBOOL i_bUpdate);
-    eErrorCodes     ParseDescriptionHeaderFile(tUINT32 &o_rSession, tUINT64 &o_rEpochTime, tUINT8 o_pSessionHash[CKeccak::EBITS_256 / 8]);
+    eErrorCodes     CreateIDsHeaderFile(tUINT64 i_qwEpochTime);
+    eErrorCodes     ScanHash(const tXCHAR *i_pTxtHash, tUINT8 o_pSessionHash[CKeccak::EBITS_256 / 8]);
     eErrorCodes     CheckDuplicates();
     eErrorCodes     GenerateDefineName(const char *i_pName, char *o_pDefine, size_t i_szDefineMax);
     const tXCHAR   *GetRelativePath(const tXCHAR *i_pFilePath);
+
+
+    inline void     PrintHash(const tUINT8 i_pHashBin[CKeccak::EBITS_256 / 8], tXCHAR *o_pHashTxt)
+    {
+        const size_t l_szHashSize = CKeccak::EBITS_256 / 8;
+
+        for (size_t l_szI = 0; l_szI < l_szHashSize; l_szI++)
+        {
+            PSPrint(o_pHashTxt + l_szI * 2, 3, TM("%02X"), i_pHashBin[l_szI]);
+        }
+    }
 };
 
 #endif //UP7_MANAGER_H
