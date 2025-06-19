@@ -2,15 +2,15 @@
 //                                                     WARNING!                                                       //
 //                                       this header is automatically generated                                       //
 //                                                 DO NOT MODIFY IT                                                   //
-//                                           Generated: 2022.11.20 17:54:47                                           //
+//                                           Generated: 2023.03.11 15:24:35                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_TARGET_CPU_H
 #define UP7_TARGET_CPU_H
 
 #define UP7_CONSECUTIVE_TRACE_ID
 
-uint32_t g_uSessionId = 2251144613;
-uint8_t  g_bCrc7 = 85;
+uint32_t g_uSessionId = 3829258061;
+uint8_t  g_bCrc7 = 99;
 
 
 size_t g_szModules = 5;
@@ -139,5 +139,5 @@ struct stuP7Trace g_pTraces[] =
     {49, 0, NULL},
     {50, sizeof(g_pArgsId50)/sizeof(struct stuP7arg), g_pArgsId50}
 };
-//uint64_t g_uEpochTime = 0x1d8fd00cc459850;
-#endif //UP7_TARGET_CPU_H:F94B9D1B45BBA5BAB0D5D45D23AD0A4747917D8D295ED4FB0FF4911B81167793
+//uint64_t g_uEpochTime = 0x1d9542534ad5c40;
+#endif //UP7_TARGET_CPU_H:29E633793710D2B23400A01E1447E3C9FF020ACBB280FE628E3101AC37F040EE

@@ -8,14 +8,14 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef uP7_VERSION_H
 #define uP7_VERSION_H
 //-----------------------------------------
-#define uP7_VERSION 0x00020003
+#define uP7_VERSION 0x00020004
 #define uP7_VERSION_MAJOR 2
-#define uP7_VERSION_MINOR 3
+#define uP7_VERSION_MINOR 4
 //-----------------------------------------
 #endif //uP7_VERSION_H

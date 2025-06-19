@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //http://www.codeproject.com/Articles/207464/Exception-Handling-in-Visual-Cplusplus

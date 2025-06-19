@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_PRE_TOOLS_H
@@ -79,7 +79,6 @@ static UNUSED_FUNC void ntohstr(tWCHAR *l_pBegin)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static UNUSED_FUNC tXCHAR *NormalizePath(const tXCHAR *io_pPath)
 {
-
     if (!io_pPath)
     {
         return NULL;
@@ -97,7 +96,6 @@ static UNUSED_FUNC tXCHAR *NormalizePath(const tXCHAR *io_pPath)
 
     while (*l_pSrc)
     {
-
         if (    (TM('/') == *l_pSrc)
              || (TM('\\') == *l_pSrc)
            )

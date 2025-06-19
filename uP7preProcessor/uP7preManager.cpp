@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -39,8 +39,7 @@ static const tXCHAR *g_puP7files[] =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CpreManager::CpreManager()
-    : m_pSrcDir(NULL)
-    , m_pOutDir(NULL)
+    : m_pOutDir(NULL)
     , m_pName(NULL)
     , m_eError(eErrorNo)
     , m_szTargetCpuBits(32)
@@ -62,12 +61,7 @@ CpreManager::~CpreManager()
 
     m_cFunctions.Clear(TRUE);
     m_cFiles.Clear(TRUE);
-
-    if (m_pSrcDir)
-    {
-        PStrFreeDub(m_pSrcDir);
-        m_pSrcDir = NULL;
-    }
+    m_cSrcDirs.Clear(TRUE);
 
     if (m_pOutDir)
     {
@@ -84,14 +78,19 @@ CpreManager::~CpreManager()
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void CpreManager::SetSourcesDir(const tXCHAR* i_pDir)
+void CpreManager::AddSourcesDir(const tXCHAR* i_pDir)
 {
-    if (m_pSrcDir)
-    {
-        PStrFreeDub(m_pSrcDir);
-    }
-
-    m_pSrcDir = NormalizePath(i_pDir);
+    CWString l_cDir(i_pDir);
+    //WARNING: sometimes directories can be provided without '/' at the end.
+    //in such cases in function GetRelativePath in specific condition wrong match can be found
+    //Let's say we have 2 added directories 
+    // /home/user/p1/libMyLib
+    // /home/user/p1/libMyLibHal
+    //And then function is called GetRelativePath("/home/user/p1/libMyLibHal/myFile.cpp") will return
+    // Hal/myFile.cpp becuse it is first match.
+    //To avoid such error - need to put / at the end of the directory
+    l_cDir.Append(1, TM("/"));
+    m_cSrcDirs.Push_Last(NormalizePath(l_cDir.Get()));
 }
 
 
@@ -199,9 +198,41 @@ tBOOL CpreManager::CheckFileHash(const tXCHAR *i_pName, const tXCHAR *i_pHash)
     const size_t l_szHashSize = CKeccak::EBITS_256 / 8;
     tUINT8       l_pHash[l_szHashSize];
     size_t       l_szHashLen  = PStrLen(i_pHash);
-    CWString     l_cPath(m_pSrcDir);
+    CWString     l_cPath;
+    int          l_iFound = 0;
+    CWString     l_cTestPath;
 
-    l_cPath.Append(2, TM("/"), i_pName);
+    if (l_szHashLen != l_szHashSize * 2)
+    {
+        printf("Error: wrong hash size\n");
+        return FALSE;
+    }
+
+    pAList_Cell l_pDirEl = NULL;
+    while ((l_pDirEl = m_cSrcDirs.Get_Next(l_pDirEl)))
+    {
+        const tXCHAR *l_pDir = m_cSrcDirs.Get_Data(l_pDirEl);
+        if (l_pDir)
+        {
+            l_cTestPath.Set(l_pDir);
+            l_cTestPath.Append(2, TM("/"), i_pName);
+            if (CFSYS::File_Exists(l_cTestPath.Get()))
+            {
+                l_cPath.Set(l_cTestPath.Get());
+                l_iFound++;
+            }
+        }
+    }
+
+    if (0 >= l_iFound)
+    {
+        return TRUE; //not found, no hash to check!
+    }
+
+    if (1 < l_iFound)
+    {
+        OSPRINT(TM("WARNING: File {%s} exist in few input directories!\n"), i_pName);
+    }
 
     tXCHAR *l_pPath = NormalizePath(l_cPath.Get());
 
@@ -211,11 +242,6 @@ tBOOL CpreManager::CheckFileHash(const tXCHAR *i_pName, const tXCHAR *i_pHash)
         return FALSE;
     }
 
-    if (l_szHashLen != l_szHashSize * 2)
-    {
-        printf("Error: wrong hash size\n");
-        return FALSE;
-    }
 
     for (size_t l_szI = 0; l_szI < l_szHashSize; l_szI++)
     {
@@ -532,7 +558,6 @@ eErrorCodes CpreManager::ScanFunctions()
 
     pAList_Cell        l_pFileEl       = NULL;
     eErrorCodes        l_eError        = eErrorNo;
-    size_t             l_szDir         = PStrLen(m_pSrcDir);
     stTraceId         *l_pTraceIdMap   = NULL;
     size_t             l_szTraceIt     = 0;
     size_t             l_szTraceMax    = 0;
@@ -582,9 +607,9 @@ eErrorCodes CpreManager::ScanFunctions()
                         if (m_bVerbose)
                         {
                             OSPRINT(TM("INFO: Trace ID collision {%s}:%d vs {%s}:%d\n"), 
-                                    l_pFile->GetOsPath() + l_szDir, 
+                                    GetRelativePath(l_pFile->GetOsPath()), 
                                     l_pFunc->GetLine(),
-                                    l_pTraceId->pFunc->GetFile()->GetOsPath() + l_szDir,
+                                    GetRelativePath(l_pTraceId->pFunc->GetFile()->GetOsPath()),
                                     l_pTraceId->pFunc->GetLine()
                                     );
                         }
@@ -608,8 +633,8 @@ eErrorCodes CpreManager::ScanFunctions()
 
                                     if (m_bVerbose)
                                     {
-                                        OSPRINT(TM("INFO: Update trace ID at file {%s}:%d\n"), 
-                                                l_pFile->GetOsPath() + l_szDir, 
+                                        OSPRINT(TM("INFO: Update trace ID in file {%s}:%d\n"), 
+                                                GetRelativePath(l_pFile->GetOsPath()), 
                                                 l_pFunc->GetLine());
                                     }
 
@@ -638,8 +663,8 @@ eErrorCodes CpreManager::ScanFunctions()
 
                                     if (m_bVerbose)
                                     {
-                                        OSPRINT(TM("INFO: Update trace ID at file {%s}:%d\n"), 
-                                                l_pFile->GetOsPath() + l_szDir, 
+                                        OSPRINT(TM("INFO: Update trace ID in file {%s}:%d\n"), 
+                                                GetRelativePath(l_pFile->GetOsPath()), 
                                                 l_pFunc->GetLine());
                                     }
 
@@ -652,7 +677,7 @@ eErrorCodes CpreManager::ScanFunctions()
                         {
                             l_eError = eErrorTraceIdOverFlow;
 
-                            OSPRINT(TM("ERROR: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
+                            OSPRINT(TM("ERROR: in file {%s}\n"), GetRelativePath(l_pFile->GetOsPath()));
                             printf(" * Line:%d, %s\n", l_pFunc->GetLine(), g_pErrorsText[l_eError]);
                         }
                     }
@@ -747,7 +772,7 @@ eErrorCodes CpreManager::ScanFunctions()
                     if (m_bVerbose)
                     {
                         OSPRINT(TM("INFO: Trace ID {%s}:%d relocation %zu->%zu\n"), 
-                                l_pFreeId->pFunc->GetFile()->GetOsPath() + l_szDir, 
+                                GetRelativePath(l_pFreeId->pFunc->GetFile()->GetOsPath()), 
                                 l_pFreeId->pFunc->GetLine(),
                                 l_szTraceMax,
                                 l_szI
@@ -780,7 +805,6 @@ tBOOL CpreManager::SaveHashes(Cfg::INode *i_pFiles)
     const size_t  l_szHashSize = CKeccak::EBITS_256 / 8;
     pAList_Cell   l_pFileEl = NULL;
     tXCHAR        l_pTxtHash[l_szHashSize * 2 + 1];
-    size_t        l_szDir   = PStrLen(m_pSrcDir);
     tBOOL         l_bReturn = TRUE;
 
     //sorting to do not change XML all the time
@@ -794,7 +818,7 @@ tBOOL CpreManager::SaveHashes(Cfg::INode *i_pFiles)
             CpreFile *l_pFileM = m_cFiles.Get_Data(l_pMax);
             CpreFile *l_pFileI = m_cFiles.Get_Data(l_pCur);
 
-            if (0 > PStrICmp(l_pFileI->GetOsPath() + l_szDir, l_pFileM->GetOsPath() + l_szDir))
+            if (0 > PStrICmp(GetRelativePath(l_pFileI->GetOsPath()), GetRelativePath(l_pFileM->GetOsPath())))
             {
                 l_pMax = l_pCur;
             }
@@ -832,7 +856,7 @@ tBOOL CpreManager::SaveHashes(Cfg::INode *i_pFiles)
             i_pFiles->AddChildEmpty(XML_NODE_FILES_ITEM, &l_pFileNode);
             if (l_pFileNode)
             {
-                l_pFileNode->SetAttrText(XML_NARG_FILES_ITEM_RELATIVE_PATH, l_pFile->GetOsPath() + l_szDir);
+                l_pFileNode->SetAttrText(XML_NARG_FILES_ITEM_RELATIVE_PATH, GetRelativePath(l_pFile->GetOsPath()));
                 l_pFileNode->SetAttrText(XML_NARG_FILES_ITEM_HASH, l_pTxtHash);
                 l_pFileNode->Release();
             }
@@ -1597,7 +1621,6 @@ eErrorCodes CpreManager::ParseDescriptionHeaderFile(tUINT32 &o_rSession, tUINT64
 eErrorCodes CpreManager::CheckDuplicates()
 {
     eErrorCodes          l_eError = eErrorNo;
-    size_t               l_szDir  = PStrLen(m_pSrcDir);
     CBList<CFuncModule*> l_cModules;
     CBList<CFuncCounter*>l_cCounters;
 
@@ -1628,10 +1651,10 @@ eErrorCodes CpreManager::CheckDuplicates()
                         {
                             if (m_bVerbose)
                             {
-                                OSPRINT(TM("WARNING: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
+                                OSPRINT(TM("WARNING: at file {%s}\n"), GetRelativePath(l_pFile->GetOsPath()));
                                 printf(" * Line:%d, register module call duplicate\n", l_pMod->GetLine());
                                 OSPRINT(TM(" * Conflicted with {%s}:%d\n"), 
-                                        l_cModules.Get_Data(l_pModEl)->GetFile()->GetOsPath() + l_szDir, 
+                                        GetRelativePath(l_cModules.Get_Data(l_pModEl)->GetFile()->GetOsPath()), 
                                         l_cModules.Get_Data(l_pModEl)->GetLine());
                             }
                             
@@ -1665,10 +1688,10 @@ eErrorCodes CpreManager::CheckDuplicates()
                             {
                                 l_eError = eErrorNameDuplicated;
 
-                                OSPRINT(TM("ERROR: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
+                                OSPRINT(TM("ERROR: at file {%s}\n"), GetRelativePath(l_pFile->GetOsPath()));
                                 printf(" * Line:%d, %s\n", l_pCounter->GetLine(), g_pErrorsText[l_eError]);
                                 OSPRINT(TM(" * Conflicted with {%s}:%d\n"), 
-                                        l_cCounters.Get_Data(l_pCounterEl)->GetFile()->GetOsPath() + l_szDir, 
+                                        GetRelativePath(l_cCounters.Get_Data(l_pCounterEl)->GetFile()->GetOsPath()), 
                                         l_cCounters.Get_Data(l_pCounterEl)->GetLine());
 
                                 break;
@@ -1772,3 +1795,27 @@ eErrorCodes CpreManager::GenerateDefineName(const char *i_pName, char *o_pDefine
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const tXCHAR *CpreManager::GetRelativePath(const tXCHAR *i_pFilePath)
+{
+    const tXCHAR *l_pReturn = TM("ERROR");
+    pAList_Cell l_pDirEl = NULL;
+
+    while ((l_pDirEl = m_cSrcDirs.Get_Next(l_pDirEl)))
+    {
+        const tXCHAR *l_pDir = m_cSrcDirs.Get_Data(l_pDirEl);
+        if (l_pDir)
+        {
+            size_t l_szDirLen = PStrLen(l_pDir);
+            if (0 == PStrNiCmp(l_pDir, i_pFilePath, l_szDirLen))
+            {
+                l_pReturn = i_pFilePath + l_szDirLen;
+                break;
+            }
+        }
+    }
+
+    while (*l_pReturn == TM('/')) l_pReturn++;
+
+    return l_pReturn;
+}

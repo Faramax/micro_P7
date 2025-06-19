@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef PCRC32_H

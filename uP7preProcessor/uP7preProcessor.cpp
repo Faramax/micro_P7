@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -159,28 +159,34 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
 
     if (4 > i_iArgC)
     {
-        printf("uP7preProcessor <config.xml> <sources files dir> <output dir>\n");
+        printf("uP7preProcessor <config.xml> <sources files dir> ... <sources files dir> <output dir>\n");
         printf("Not all arguments are specified\n");
         printf("Please refer to documentation for further details\n");
         l_iReturn = eErrorArguments;
         goto l_lblExit;
     }
 
-    if (!CFSYS::Directory_Exists(i_pArgV[DIR_SRC_INDEX]))
+    for (int l_iI = DIR_SRC_INDEX; l_iI < DIR_OUT_INDEX; l_iI++)
     {
-        printf("Source folder doesn't exists\n");
-        l_iReturn = eErrorArguments;
-        goto l_lblExit;
+        if (CFSYS::Directory_Exists(i_pArgV[l_iI]))
+        {
+            l_cManager.AddSourcesDir(i_pArgV[l_iI]);
+        }
+        else
+        {
+            OSPRINT(TM("Source folder doesn't exists {%s}\n"), i_pArgV[l_iI]);
+            l_iReturn = eErrorArguments;
+            goto l_lblExit;
+        }
     }
 
     if (!CFSYS::Directory_Exists(i_pArgV[DIR_OUT_INDEX]))
     {
-        printf("Source folder doesn't exists\n");
+        OSPRINT(TM("Output folder doesn't exists {%s}\n"), i_pArgV[DIR_OUT_INDEX]);
         l_iReturn = eErrorArguments;
         goto l_lblExit;
     }
 
-    l_cManager.SetSourcesDir(i_pArgV[DIR_SRC_INDEX]);
     l_cManager.SetOutputDir(i_pArgV[DIR_OUT_INDEX]);
 
     l_iDoc = IBDoc_Load(i_pArgV[CFG_FILE_INDEX]);
@@ -298,8 +304,11 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
 
         if (l_pMask)
         {
-            l_cDir.Set(i_pArgV[DIR_SRC_INDEX]);
-            CFSYS::Enumerate_Files(&l_cFiles, &l_cDir, l_pMask);
+            for (int l_iI = DIR_SRC_INDEX; l_iI < DIR_OUT_INDEX; l_iI++)
+            {
+                l_cDir.Set(i_pArgV[l_iI]);
+                CFSYS::Enumerate_Files(&l_cFiles, &l_cDir, l_pMask);
+            }
         }
 
         Cfg::INode *l_pNext = NULL;

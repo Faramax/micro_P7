@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef PFILESYSTEM_H
@@ -146,6 +146,22 @@ public:
 
         while ((l_pDir_Entry = readdir(l_pDir)) != 0)
         {
+            if (DT_LNK == l_pDir_Entry->d_type)
+            {
+                CWString l_pTmp;
+                l_pTmp.Set(i_pDirectory->Get());
+                l_pTmp.Append(2, L"/", l_pDir_Entry->d_name);
+
+                if (File_Exists(l_pTmp.Get()))
+                {
+                    l_pDir_Entry->d_type = DT_REG;
+                }
+                else if (Directory_Exists(l_pTmp.Get()))
+                {
+                    l_pDir_Entry->d_type = DT_DIR;
+                }
+            }
+
             if (DT_REG == l_pDir_Entry->d_type)
             {
                 if (0 == fnmatch(i_pMask, l_pDir_Entry->d_name, FNM_NOESCAPE | FNM_CASEFOLD))
@@ -176,7 +192,7 @@ public:
 
     }// Enumerate_Files
 
-	
+    
     ////////////////////////////////////////////////////////////////////////////
     // Enumerate_Dirs
     static void Enumerate_Dirs(CBList<CWString*> *io_pList, const tXCHAR *i_pRoot)
@@ -186,11 +202,11 @@ public:
             return;
         }
 
-		if (!i_pRoot)
-		{
-		    i_pRoot = "/";
-		}
-		
+        if (!i_pRoot)
+        {
+            i_pRoot = "/";
+        }
+        
         DIR    *l_pDir       = opendir(i_pRoot);
         dirent *l_pDir_Entry = 0;
 
@@ -219,7 +235,7 @@ public:
         closedir(l_pDir);
         l_pDir = 0;
     }// Enumerate_Dirs
-	
+    
     ////////////////////////////////////////////////////////////////////////////
     //Get_File_Size
     static tUINT64 Get_File_Size(const tACHAR *i_pFile)
@@ -309,8 +325,8 @@ public:
         o_pPath->Set(pw->pw_dir);
         return TRUE;
     }
-	
-	
+    
+    
     ////////////////////////////////////////////////////////////////////////////
     //GetUserDirectory
     static tBOOL GetDirectoryParent(CWString &i_rChild, CWString &o_rParent)
@@ -350,7 +366,7 @@ public:
 
         return (*l_pDir) ? TRUE : FALSE;
     }
-	
+    
 };
 
 

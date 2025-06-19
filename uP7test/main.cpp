@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
@@ -48,7 +48,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -60,7 +60,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -71,7 +71,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -82,7 +82,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -93,7 +93,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -104,7 +104,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
 

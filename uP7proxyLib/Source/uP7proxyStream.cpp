@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -122,7 +122,7 @@ bool CProxyStream::Maintain()
        )
 
     {
-        uERROR(TM("[CPU#%d] Synchronization timeout. Timestamps won't be syncronized with HOST!"), (int)m_bId);
+        uERROR(TM("[CPU#%d] Synchronization timeout. Timestamps won't be synchronized with HOST!"), (int)m_bId);
         Start();
     }
     else if (eStateReady == m_eState)

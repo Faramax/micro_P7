@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_MANAGER_H
@@ -18,6 +18,22 @@ class CpreFile; //forward definition
 
 class CpreManager
 {
+    class CStrList: public CBList<tXCHAR*>
+    {
+    protected:
+        virtual tBOOL Data_Release(tXCHAR* i_pData)
+        {
+            if (NULL == i_pData)
+            {
+                return FALSE;
+            }
+
+            PStrFreeDub(i_pData);
+            return TRUE;
+        }//CListBase::Data_Release
+
+    };
+
     struct stTraceId
     {
         CFuncTrace *pFunc;
@@ -26,7 +42,7 @@ class CpreManager
 
 
     CFunctionsList       m_cFunctions;
-    tXCHAR              *m_pSrcDir;
+    CStrList             m_cSrcDirs;
     tXCHAR              *m_pOutDir;
     tXCHAR              *m_pName;
     CBList<CpreFile*>    m_cFiles;
@@ -44,9 +60,8 @@ public:
     CpreManager();
     virtual ~CpreManager();
     CFunctionsList& GetFunctions() {return m_cFunctions;}
-    void            SetSourcesDir(const tXCHAR *i_pDir);
+    void            AddSourcesDir(const tXCHAR *i_pDir);
     void            SetOutputDir(const tXCHAR *i_pDir);
-    const tXCHAR*   GetDir() { return m_pSrcDir;}
     void            SetName(const tXCHAR *i_pName);
     const tXCHAR*   GetName() { return m_pName; }
     void            SetTargetCpuBitsCount(size_t i_szBits);
@@ -77,7 +92,7 @@ private:
     eErrorCodes     ParseDescriptionHeaderFile(tUINT32 &o_rSession, tUINT64 &o_rEpochTime, tUINT8 o_pSessionHash[CKeccak::EBITS_256 / 8]);
     eErrorCodes     CheckDuplicates();
     eErrorCodes     GenerateDefineName(const char *i_pName, char *o_pDefine, size_t i_szDefineMax);
-
+    const tXCHAR   *GetRelativePath(const tXCHAR *i_pFilePath);
 };
 
 #endif //UP7_MANAGER_H

@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_PRE_DEFINES_H
@@ -158,7 +158,7 @@ enum eErrorCodes
                                                
 #define CFG_FILE_INDEX                           1
 #define DIR_SRC_INDEX                            2
-#define DIR_OUT_INDEX                            3
+#define DIR_OUT_INDEX                            (i_iArgC - 1)
 
 
 #endif //UP7_PRE_DEFINES_H

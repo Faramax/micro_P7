@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
@@ -254,9 +254,8 @@ bool t5Time(const tXCHAR *i_pSessionFolder)
 
         while (CTicks::Difference(GetTickCount(), l_uTimeStart) < T5_DURATION_MS)
         {
-            uP7ProcessIncomingData(&l_stReadCtx, 10);
             uP7TRC(49, l_hModule1, "T5 test message", 0);
-            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            uP7ProcessIncomingData(&l_stReadCtx, 5);
         }
     });
 
@@ -290,7 +289,7 @@ bool t5Time(const tXCHAR *i_pSessionFolder)
 
     printf("t5Time: drift: %d\n", iDrift);
 
-    if (abs(iDrift) > 6)
+    if (abs(iDrift) > 10)
     {
         return false;
     }

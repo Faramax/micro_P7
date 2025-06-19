@@ -8,7 +8,7 @@
 // details.                                                                                                            /
 // You should have received a copy of the GNU Lesser General Public License along with this library.                   /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2023 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7HELPERS_H
@@ -25,6 +25,10 @@
     #define ST_ATTR_PACK(x)
 #endif
 
+#define CONCATENATE_DETAIL(x, y) x##y
+#define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
+#define MAKE_UNIQUE(x) CONCATENATE(x, __COUNTER__)
+
 #if !defined(TRUE)
     #define TRUE              1
     #define FALSE             0
@@ -34,8 +38,10 @@
     #define UNUSED_ARG(x)     (void)(x)
 #endif
 
+
 #if !defined(ST_ASSERT)
-    #define ST_ASSERT(cond)   typedef int assert_type[(cond) ? 1 : -1]
+    #define ST_ASSERT(cond)   typedef int MAKE_UNIQUE(assert_type) [(cond) ? 1 : -1]
 #endif
+
 
 #endif //UP7HELPERS_H
