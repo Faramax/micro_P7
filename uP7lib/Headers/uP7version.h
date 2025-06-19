@@ -14,8 +14,8 @@
 #ifndef uP7_VERSION_H
 #define uP7_VERSION_H
 //-----------------------------------------
-#define uP7_VERSION 0x00010008
+#define uP7_VERSION 0x00010009
 #define uP7_VERSION_MAJOR 1
-#define uP7_VERSION_MINOR 8
+#define uP7_VERSION_MINOR 9
 //-----------------------------------------
 #endif //uP7_VERSION_H

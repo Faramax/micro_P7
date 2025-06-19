@@ -114,6 +114,7 @@ bool CuP7FifoGroup::UnregisterFifo(CuP7Fifo *i_pFifo)
     if (l_pEl)
     {
         i_pFifo->SetGroup(NULL);
+        i_pFifo->Release();
     }
 
     return l_pEl ? true : false;

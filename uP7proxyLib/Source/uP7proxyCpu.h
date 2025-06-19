@@ -95,7 +95,8 @@ public:
     virtual ~CProxyCpu();
     bool     Process(CuP7Fifo::stBuffer *i_pBuffer);
     bool     Maintain();
-    uint8_t  GetId() {return m_bId;}
+    uint8_t  GetId()   {return m_bId;}
+    CuP7Fifo*GetFifo() {return m_iFifo;}
 protected:
     bool                      SyncronizeSession(const uint8_t *i_pData, size_t i_szData);
     const stPreProcessorFile *FindDescription(uint32_t i_uSessionId);

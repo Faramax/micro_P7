@@ -578,6 +578,25 @@ void CuP7proxy::ProcRoutine()
                              && (l_pCmd->bCpuId == l_pCpu->GetId())
                            )
                         {
+                            CuP7Fifo::stBuffer* l_pBuffer      = nullptr;
+                            CuP7Fifo           *l_pCpuFifo     = l_pCpu->GetFifo(); 
+                            const uint32_t      l_uStartTimeMs = GetTickCount();
+                            const uint32_t      l_uTimeout     = COMMAND_TIMEOUT_MS * 3/4; //75% of command timeout
+
+                            while ((l_pBuffer = l_pCpuFifo->PullFirst()) != nullptr)
+                            {
+                                l_pCpu->Process(l_pBuffer);
+
+                                if (CTicks::Difference(GetTickCount(), l_uStartTimeMs) >= l_uTimeout)
+                                {
+                                    uERROR(TM("uP7 proxy delete cpu#%d but there is data in FIFO"), (int)l_pCmd->bCpuId); 
+                                    break;
+                                }
+                            }
+
+                            l_cFifoGroup.UnregisterFifo(l_pCpuFifo);
+                            l_pCpuFifo = nullptr;
+
                             l_cCpuList.Del(l_pEl, TRUE);
                             l_pCmd->bResult = true;
                             break;

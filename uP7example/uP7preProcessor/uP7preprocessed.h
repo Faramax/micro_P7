@@ -1,14 +1,27 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                                                                                                     /
+// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
+// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
+// any later version.                                                                                                  /
+// This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
+// warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
+// details.                                                                                                            /
+// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+//                                                                                                                     /
+// 2012-2021 (c) Baical                                                                                                /
+//                                                                                                                     /
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                     WARNING!                                                       //
 //                                       this header is automatically generated                                       //
 //                                                 DO NOT MODIFY IT                                                   //
-//                                           Generated: 2021.09.17 18:39:46                                           //
+//                                           Generated: 2021.08.13 19:43:58                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_TARGET_CPU_H
 #define UP7_TARGET_CPU_H
 
-uint32_t g_uSessionId = 2268502963;
-uint8_t  g_bCrc7 = 66;
+uint32_t g_uSessionId = 1068459680;
+uint8_t  g_bCrc7 = 81;
 
 
 size_t g_szModules = 2;
@@ -35,5 +48,5 @@ struct stuP7Trace g_pTraces[] =
     {2, 0, NULL},
     {3, 0, NULL}
 };
-//uint64_t g_uEpochTime = 0x1d7abda3e50aff8;
-#endif //UP7_TARGET_CPU_H:AF92A9CC3A1FF1114F010B3E8DA28C14CFD9B30C7EF464905D2CF229A8A95087
+//uint64_t g_uEpochTime = 0x1d790732d520df0;
+#endif //UP7_TARGET_CPU_H:E692E78BB2CEACD19917584D2ADFC66CE70116565C0F78C3628F98241DC2B69D
