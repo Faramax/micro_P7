@@ -68,6 +68,7 @@ protected:
     size_t                 m_szCpu2HostBuffer;
     size_t                 m_szCpu2Host;
     size_t                 m_szCpu2HostFree;
+    size_t                 m_szCpu2HostBuffersCount;
 
 public:
     CuP7Fifo(uint8_t i_bCpuId, size_t i_szFifoSize, bool i_bFifoBiDirectional, IP7_Trace *i_pP7Trace);
@@ -90,7 +91,7 @@ public:
     CuP7Fifo::stBuffer *PullFirst();
 
     inline uint8_t GetId() const { return m_bCpuId;}
-    
+    inline size_t GetBuffersCount() const { return m_szCpu2HostBuffersCount; }
 };
 
 
@@ -127,6 +128,7 @@ public:
     bool RegisterFifo(CuP7Fifo *i_pFifo);
     bool UnregisterFifo(CuP7Fifo *i_pFifo);
     CuP7Fifo::stBuffer *PullBuffer();
+    CuP7Fifo::stBuffer *PullBuffer(uint8_t i_bCpuId);
 
     inline CFifoList *GetFifos() { return &m_cFifos; }
 

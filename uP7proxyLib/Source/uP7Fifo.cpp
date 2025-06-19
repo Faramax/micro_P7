@@ -136,6 +136,29 @@ CuP7Fifo::stBuffer *CuP7FifoGroup::PullBuffer()
     return l_pReturn;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CuP7Fifo::stBuffer *CuP7FifoGroup::PullBuffer(uint8_t i_bCpuId)
+{
+    CuP7Fifo::stBuffer *l_pReturn = NULL;
+    LOCK_ENTER(m_hCS);
+
+    pAList_Cell l_pEl = NULL;
+    while ((l_pEl = m_cCpu2Host.Get_Next(l_pEl)))
+    {
+        CuP7Fifo::stBuffer *l_pTmp = m_cCpu2Host.Get_Data(l_pEl);
+        if ((l_pTmp) && (l_pTmp->bCpuId == i_bCpuId))
+        {
+            l_pReturn = l_pTmp;
+            m_cCpu2Host.Del(l_pEl, FALSE);
+            break;
+        }
+    }
+    LOCK_EXIT(m_hCS);
+
+    return l_pReturn;
+}
+
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +175,7 @@ CuP7Fifo::CuP7Fifo(uint8_t i_bCpuId, size_t i_szFifoSize, bool i_bFifoBiDirectio
     , m_szCpu2HostBuffer(0)
     , m_szCpu2Host(0)
     , m_szCpu2HostFree(0)
-
+    , m_szCpu2HostBuffersCount(0)
 {
     LOCK_CREATE(m_hCS);
     m_cReadEvent.Init(1, EMEVENT_MULTI);
@@ -171,15 +194,16 @@ CuP7Fifo::CuP7Fifo(uint8_t i_bCpuId, size_t i_szFifoSize, bool i_bFifoBiDirectio
     //Starting from largest buffer size trying to calculate how much buffers we
     //can allocate, if amount is smaller than minimum - device buffer size by 2
     //and repeat procedure
-    while (l_dwBuffersCount < FIFO_MIN_BUFFERS_COUNT)
+    while ((l_dwBuffersCount < FIFO_MIN_BUFFERS_COUNT) || (l_szBufferSize >= FIFO_MAX_BUFFER_SIZE))
     {
         l_szBufferSize /= 2; 
         l_dwBuffersCount = i_szFifoSize / l_szBufferSize;
     }
 
-    m_szCpu2HostBuffer = l_szBufferSize;
-    m_szCpu2Host       = l_dwBuffersCount * l_szBufferSize;
-    m_szCpu2HostFree   = m_szCpu2Host;
+    m_szCpu2HostBuffer       = l_szBufferSize;
+    m_szCpu2Host             = l_dwBuffersCount * l_szBufferSize;
+    m_szCpu2HostFree         = m_szCpu2Host;
+    m_szCpu2HostBuffersCount = l_dwBuffersCount;
 
     while (l_dwBuffersCount--)
     {
@@ -224,18 +248,18 @@ bool CuP7Fifo::Write(const void *i_pData, size_t i_szData)
     LOCK_ENTER(m_hCS);
     bool l_bReturn = false;
 
-    if (i_szData < m_szCpu2HostFree)
+    if (i_szData <= m_szCpu2HostFree)
     {
-        bool   l_bExit        = false;
+        bool   l_bExit       = false;
         size_t l_szChunkOffs = 0;
         size_t l_szChunkSize = i_szData;
     
         m_szCpu2HostFree -= i_szData;
 
-        while (FALSE == l_bExit)
+        while (false == l_bExit)
         {
             //if packet is null we need to extract another one 
-            if (NULL == m_cCpu2HostCurrent)
+            if (nullptr == m_cCpu2HostCurrent)
             {
                 m_cCpu2HostCurrent = m_cCpu2Host.Pull_First();
             }
@@ -271,14 +295,15 @@ bool CuP7Fifo::Write(const void *i_pData, size_t i_szData)
                 }
                 else //if chunk data is greater than packet free space
                 {
+                    size_t l_szTail = BUFFER_TAIL_SIZE(m_cCpu2HostCurrent);
                     memcpy(m_cCpu2HostCurrent->pData + m_cCpu2HostCurrent->szUsed, 
                            ((uint8_t*)i_pData) + l_szChunkOffs,
-                           BUFFER_TAIL_SIZE(m_cCpu2HostCurrent)
+                           l_szTail
                           );
 
-                    l_szChunkOffs              += BUFFER_TAIL_SIZE(m_cCpu2HostCurrent);
-                    l_szChunkSize              -= BUFFER_TAIL_SIZE(m_cCpu2HostCurrent);
-                    m_cCpu2HostCurrent->szUsed += BUFFER_TAIL_SIZE(m_cCpu2HostCurrent);
+                    l_szChunkOffs              += l_szTail;
+                    l_szChunkSize              -= l_szTail;
+                    m_cCpu2HostCurrent->szUsed += l_szTail;
 
                     LOCK_ENTER(m_pGroup->m_hCS);
                     m_pGroup->m_cCpu2Host.Push_Last(m_cCpu2HostCurrent);
@@ -527,7 +552,10 @@ CuP7Fifo::stBuffer *CuP7Fifo::PullFirst()
 {
     CuP7Fifo::stBuffer *l_pReturn = NULL;
     LOCK_ENTER(m_hCS);
-    if (m_cCpu2HostCurrent)
+    //check that only current buffer has data, all others are empty
+    if (    (m_cCpu2HostCurrent)
+         && (m_szCpu2HostBuffersCount == (m_cCpu2Host.Count() + 1))
+       )
     {
         m_szCpu2HostFree -= m_szCpu2HostBuffer - m_cCpu2HostCurrent->szUsed;
 

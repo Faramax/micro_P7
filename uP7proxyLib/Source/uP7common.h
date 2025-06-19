@@ -112,7 +112,7 @@ extern "C"
 #define FIFO_MIN_LENGTH               16384
 #define FIFO_MIN_BUFFERS_COUNT        4
 #define FIFO_MIN_BUFFER_SIZE          4096
-#define FIFO_MAX_BUFFER_SIZE          (128*1024)
+#define FIFO_MAX_BUFFER_SIZE          (256*1024)
 
 
 #define TIME_SYNC_TIMEOUT_MS              1250

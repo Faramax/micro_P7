@@ -526,12 +526,8 @@ void CuP7proxy::ProcRoutine()
                 }
                 else
                 {
-                    uERROR(TM("Reveive empty buffer, panic?"), 0);
+                    uCRITICAL(TM("Unitialized cpu#%d, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
                 }
-            }
-            else
-            {
-                uCRITICAL(TM("Unitialized cpu#%d, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
             }
         }
         else if (    (eProcThreadAddCpu == l_uCmdId)
@@ -578,25 +574,30 @@ void CuP7proxy::ProcRoutine()
                              && (l_pCmd->bCpuId == l_pCpu->GetId())
                            )
                         {
-                            CuP7Fifo::stBuffer* l_pBuffer      = nullptr;
-                            CuP7Fifo           *l_pCpuFifo     = l_pCpu->GetFifo(); 
-                            const uint32_t      l_uStartTimeMs = GetTickCount();
-                            const uint32_t      l_uTimeout     = COMMAND_TIMEOUT_MS * 3/4; //75% of command timeout
+                            size_t l_szMaxCount = l_pCpu->GetFifo()->GetBuffersCount();
+                            CuP7Fifo::stBuffer *l_pBuffer = nullptr;
 
-                            while ((l_pBuffer = l_pCpuFifo->PullFirst()) != nullptr)
+                            for (size_t l_szI = 0; l_szI < l_szMaxCount; l_szI++)
                             {
-                                l_pCpu->Process(l_pBuffer);
-
-                                if (CTicks::Difference(GetTickCount(), l_uStartTimeMs) >= l_uTimeout)
+                                l_pBuffer = l_cFifoGroup.PullBuffer(l_pCpu->GetId());
+                                if (l_pBuffer)
                                 {
-                                    uERROR(TM("uP7 proxy delete cpu#%d but there is data in FIFO"), (int)l_pCmd->bCpuId); 
+                                    l_pCpu->Process(l_pBuffer);
+                                }
+                                else
+                                {
                                     break;
                                 }
                             }
 
-                            l_cFifoGroup.UnregisterFifo(l_pCpuFifo);
-                            l_pCpuFifo = nullptr;
 
+                            l_pBuffer = l_pCpu->GetFifo()->PullFirst();
+                            if (l_pBuffer)
+                            {
+                                l_pCpu->Process(l_pBuffer);
+                            }
+
+                            l_cFifoGroup.UnregisterFifo(l_pCpu->GetFifo());
                             l_cCpuList.Del(l_pEl, TRUE);
                             l_pCmd->bResult = true;
                             break;
