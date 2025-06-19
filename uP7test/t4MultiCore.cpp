@@ -223,7 +223,7 @@ bool t4MultiCore(uint8_t i_bCount, const tXCHAR *i_pSessionFolder)
             for (int l_iI = 0; l_iI < l_iTraces; l_iI++)
             {
                 uP7ProcessIncomingData(&l_stReadCtx, 0);
-                uP7TRC(47, l_hModule1, "Iter %d", l_iI);
+                uP7TRC(48, l_hModule1, "Iter %d", l_iI);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         });

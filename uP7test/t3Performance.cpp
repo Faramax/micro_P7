@@ -104,7 +104,7 @@ bool t3Performance(const tXCHAR *i_pSessionFolder)
 
     for (uint32_t l_uI = 0; l_uI < 20'000'000; l_uI ++)
     {
-        if (uP7CRT(46, l_hModule1, "Trace test 0x%X" , l_uI))
+        if (uP7CRT(47, l_hModule1, "Trace test 0x%X" , l_uI))
         {
             uSent++;
         }

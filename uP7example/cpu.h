@@ -16,4 +16,3 @@
 void CpuStart();
 
 uint64_t CpuTimerFrequency();
-

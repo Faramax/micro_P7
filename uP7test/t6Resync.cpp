@@ -227,7 +227,7 @@ bool t6Resync(const tXCHAR *i_pSessionFolder)
 
             for (size_t l_szI = 0; l_szI < l_szMessages; l_szI++)
             {
-                uP7ERR(55, l_hModule1, "T6 test message #%05zu {%s}", l_szI, l_pText[l_szI % 10]);
+                uP7ERR(50, l_hModule1, "T6 test message #%05zu {%s}", l_szI, l_pText[l_szI % 10]);
 
                 if ((l_szI + 1) == l_szMessages)
                 {

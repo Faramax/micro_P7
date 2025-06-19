@@ -108,6 +108,8 @@ enum eErrorCodes
 #define XML_ATTE_OPTIONS_PROJECT_WCHAR               TM("wchar_t")
 #define XML_ATTE_OPTIONS_PROJECT_TEST_MODE           TM("TestMode")
 #define XML_ATTE_OPTIONS_PROJECT_IDS                 TM("IDsHeader")
+#define XML_ATTE_OPTIONS_PROJECT_CONSECUTIVE_ID      TM("ConsecutiveId")
+#define XML_ATTE_OPTIONS_PROJECT_VERBOSE             TM("Verbose")
 
 #define XML_NODE_OPTIONS_PROCESS                  TM("Process")
 #define XML_NODE_OPTIONS_PROCESS_PATTERN            TM("Pattern")

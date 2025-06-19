@@ -215,12 +215,12 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
         }
     });
 
-    uP7TRC(2, l_hModule1, "String: %.10ls (%%.10ls = ([x]s is unsupported by uP7))", L"12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(5, l_hModule1, "String: %s (%%s = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(0, l_hModule1, "String: %.*s (%%.*s = ([x]s is unsupported by uP7))", 0, "12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(1, l_hModule1, "String: %ls (%%ls = 12345 abcde .. z // \\ ABCDE .. Z)", L"12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(3, l_hModule1, "String: %hs (%%hs = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(4, l_hModule1, "String: %.10hs (%%.10hs = ([x]s is unsupported by uP7))", "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(0, l_hModule1, "String: %.10ls (%%.10ls = ([x]s is unsupported by uP7))", L"12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(1, l_hModule1, "String: %s (%%s = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(2, l_hModule1, "String: %.*s (%%.*s = ([x]s is unsupported by uP7))", 0, "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(3, l_hModule1, "String: %ls (%%ls = 12345 abcde .. z // \\ ABCDE .. Z)", L"12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(4, l_hModule1, "String: %hs (%%hs = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(5, l_hModule1, "String: %.10hs (%%.10hs = ([x]s is unsupported by uP7))", "12345 abcde .. z // \\ ABCDE .. Z");
     uP7TRC(6, l_hModule1, "String: %ws (%%ws = 12345 abcde .. z // \\ ABCDE .. Z)", L"12345 abcde .. z // \\ ABCDE .. Z");
     uP7TRC(7, l_hModule1, "String: %.10ws (%%.10ws = ([x]s is unsupported by uP7))", L"12345 abcde .. z // \\ ABCDE .. Z");
 
@@ -416,7 +416,7 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
                           (tUINT32)0xDEADBEEF
                          );
 
-        uP7TRC(49, l_hModule1, "Hex  {%+10d} (%%+10d = {  +1234567}) | {%+*.*d} (%%+*.*d = { +0001234567}})",
+        uP7TRC(46, l_hModule1, "Hex  {%+10d} (%%+10d = {  +1234567}) | {%+*.*d} (%%+*.*d = { +0001234567}})",
                           (tUINT32)1234567,
                           12,
                           10,

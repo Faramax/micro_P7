@@ -15,13 +15,15 @@
 //                                                     WARNING!                                                       //
 //                                       this header is automatically generated                                       //
 //                                                 DO NOT MODIFY IT                                                   //
-//                                           Generated: 2021.08.13 19:43:58                                           //
+//                                           Generated: 2021.12.25 18:48:46                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_TARGET_CPU_H
 #define UP7_TARGET_CPU_H
 
-uint32_t g_uSessionId = 1068459680;
-uint8_t  g_bCrc7 = 81;
+#define UP7_CONSECUTIVE_TRACE_ID
+
+uint32_t g_uSessionId = 3681427172;
+uint8_t  g_bCrc7 = 112;
 
 
 size_t g_szModules = 2;
@@ -38,15 +40,15 @@ struct stuP7telemetry g_pTelemetry[] =
     {"XML Counter", 622366530, true, 1}
 };
 
-static const struct stuP7arg g_pArgsId1[] = { {(uint8_t)euP7_arg_int64, 8} };
+static const struct stuP7arg g_pArgsId2[] = { {(uint8_t)euP7_arg_int64, 8} };
 
 size_t g_szTraces = 4;
 struct stuP7Trace g_pTraces[] = 
 {
     {0, 0, NULL},
-    {1, sizeof(g_pArgsId1)/sizeof(struct stuP7arg), g_pArgsId1},
-    {2, 0, NULL},
+    {1, 0, NULL},
+    {2, sizeof(g_pArgsId2)/sizeof(struct stuP7arg), g_pArgsId2},
     {3, 0, NULL}
 };
-//uint64_t g_uEpochTime = 0x1d790732d520df0;
-#endif //UP7_TARGET_CPU_H:E692E78BB2CEACD19917584D2ADFC66CE70116565C0F78C3628F98241DC2B69D
+//uint64_t g_uEpochTime = 0x1d7f9b7aa69c9b0;
+#endif //UP7_TARGET_CPU_H:08880F4733587735FE4BC1C1702C2BF23C0902F3D07B72BA6E8BE4BF1A127EC9

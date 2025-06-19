@@ -18,6 +18,13 @@ class CpreFile; //forward definition
 
 class CpreManager
 {
+    struct stTraceId
+    {
+        CFuncTrace *pFunc;
+        bool        bUsed;
+    };
+
+
     CFunctionsList       m_cFunctions;
     tXCHAR              *m_pSrcDir;
     tXCHAR              *m_pOutDir;
@@ -30,6 +37,8 @@ class CpreManager
     size_t               m_szTargetCpuBits;
     size_t               m_szWcharBits;
     bool                 m_bIDsHeader;
+    bool                 m_bConsecutiveId;
+    bool                 m_bVerbose;
 
 public:
     CpreManager();
@@ -45,6 +54,9 @@ public:
     void            SetTargetCpuWCharBitsCount(size_t i_szBits);
     size_t          GetTargetCpuWCharBitsCount() { return m_szWcharBits; }
     void            EnableIDsHeader();
+    void            EnableConsecutiveId();
+    void            EnableVerbose();
+
     eErrorCodes     AddFile(const tXCHAR *i_pPath);
     eErrorCodes     AddFile(const tXCHAR *i_pPath, Cfg::INode *i_pNode);
     tBOOL           CheckFileHash(const tXCHAR *i_pName, const tXCHAR *i_pHash);
@@ -52,6 +64,7 @@ public:
     tBOOL           SetExcludedFile(const tXCHAR *i_pName);
 
     int             Process();
+    eErrorCodes     ScanFunctions();
     tBOOL           SaveHashes(Cfg::INode *i_pFiles);
 private:
     eErrorCodes     CreateDescriptionHeaderFile(tUINT32      i_uSession, 

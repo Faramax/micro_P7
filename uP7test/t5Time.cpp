@@ -255,7 +255,7 @@ bool t5Time(const tXCHAR *i_pSessionFolder)
         while (CTicks::Difference(GetTickCount(), l_uTimeStart) < T5_DURATION_MS)
         {
             uP7ProcessIncomingData(&l_stReadCtx, 10);
-            uP7TRC(48, l_hModule1, "T5 test message", 0);
+            uP7TRC(49, l_hModule1, "T5 test message", 0);
             //std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
     });

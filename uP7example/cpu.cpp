@@ -170,7 +170,7 @@ void CpuStart()
 
     uP7init(&l_stCtx);
 
-    uP7INF(2, uP7M_XML_MODULE, "Start test", 0);
+    uP7INF(1, uP7M_XML_MODULE, "Start test", 0);
 
     while (     (!Is_Key_Hit())
              || (27 != Get_Char())
@@ -181,7 +181,7 @@ void CpuStart()
         
         uP7ProcessIncomingData(&l_stCtx);
 
-        uP7DBG(1, l_stCtx.hModule, "Iteration %I64d", l_qwIter++);
+        uP7DBG(2, l_stCtx.hModule, "Iteration %I64d", l_qwIter++);
 
         uP7TelSentSample(uP7T_XML_COUNTER, l_dbIter);
         l_dbIter += 0.5;
@@ -196,4 +196,3 @@ void CpuStart()
 
     uP7INF(3, uP7M_XML_MODULE, "Stop test", 0);
 }
-

@@ -85,4 +85,3 @@ bool t1CreateDestroy(size_t i_szIterations, uint8_t i_szCpus, const tXCHAR *i_pS
 
     return l_bReturn;
 }
-

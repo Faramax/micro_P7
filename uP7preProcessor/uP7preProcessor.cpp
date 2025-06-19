@@ -260,6 +260,25 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
             l_cManager.EnableIDsHeader();
         }
 
+        tXCHAR *l_pIdMode = NULL;
+        l_pCPU->GetAttrText(XML_ATTE_OPTIONS_PROJECT_CONSECUTIVE_ID, &l_pIdMode);
+        if (    (l_pIdMode)
+             && (0 == PStrICmp(l_pIdMode, TM("true")))
+           )
+        {
+            l_cManager.EnableConsecutiveId();
+        }
+
+        tXCHAR *l_pVerbose = NULL;
+        l_pCPU->GetAttrText(XML_ATTE_OPTIONS_PROJECT_VERBOSE, &l_pVerbose);
+        if (    (l_pVerbose)
+             && (0 == PStrICmp(l_pVerbose, TM("true")))
+           )
+        {
+            l_cManager.EnableVerbose();
+        }
+
+
         l_pCPU->Release();
         l_pCPU = NULL;
     }

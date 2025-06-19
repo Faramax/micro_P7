@@ -19,7 +19,14 @@ static const tXCHAR *g_puP7files[] =
 {
     TM("uP7.c"),
     TM("uP7.h"),
-    TM("uP7preprocessed.h")
+    TM("uP7context.h"),
+    TM("uP7hash.h"),
+    TM("uP7helpers.h"),
+    TM("uP7protocol.h"),
+    TM("uP7version.h"),
+    TM("uP7platform.h"),
+    TM("uP7preprocessed.h"),
+    TM("uP7IDs.h")
 };
 
 #define uP7_PREPREOCESSED_H  TM("/uP7preprocessed.h")
@@ -39,6 +46,8 @@ CpreManager::CpreManager()
     , m_szTargetCpuBits(32)
     , m_szWcharBits(16)
     , m_bIDsHeader(false)
+    , m_bConsecutiveId(false)
+    , m_bVerbose(false)
 {
 
 }
@@ -128,6 +137,19 @@ void CpreManager::SetTargetCpuWCharBitsCount(size_t i_szBits)
 void CpreManager::EnableIDsHeader()
 {
     m_bIDsHeader = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CpreManager::EnableConsecutiveId()
+{
+    m_bConsecutiveId = true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CpreManager::EnableVerbose()
+{
+    m_bVerbose = true;
 }
 
 
@@ -294,12 +316,6 @@ tBOOL CpreManager::SetExcludedFile(const tXCHAR *i_pName)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int CpreManager::Process()
 {
-    struct stTraceId
-    {
-        CFuncRoot *pFunc;
-        bool       bUsed;
-    };
-
     struct stSessionHeader
     {
         tUINT32  uSessionId;
@@ -308,25 +324,22 @@ int CpreManager::Process()
         bool     bValid;
     };
 
-    std::uniform_int_distribution<tUINT32> l_cRand(0u, 0xFFFFFFFFu);
+    std::uniform_int_distribution<tUINT32> l_cRandSession(0u, 0xFFFFFFFFu);
     std::random_device l_cRd;
 
-    pAList_Cell        l_pFileEl     = NULL;
-    eErrorCodes        l_eError      = eErrorNo;
-    size_t             l_szDir       = PStrLen(m_pSrcDir);
-    tUINT32            l_uSessionId  = l_cRand(l_cRd);
-    tUINT64            l_qwEpochTime = GetEpochTime();
-    tUINT8             l_uSessionCrc7= 0;
-    CSessionFile      *l_pOldSession = nullptr;
-    CSessionFile      *l_pNewSession = nullptr;
-    stTraceId         *l_pTraceIdMap = NULL;
-    size_t             l_szTraceIt   = 0;
+    pAList_Cell        l_pFileEl       = NULL;
+    eErrorCodes        l_eError        = eErrorNo;
+    tUINT32            l_uSessionId    = l_cRandSession(l_cRd);  
+    tUINT64            l_qwEpochTime   = GetEpochTime();
+    tUINT8             l_uSessionCrc7  = 0;
+    CSessionFile      *l_pOldSession   = nullptr;
+    CSessionFile      *l_pNewSession   = nullptr;
     stSessionHeader    l_stSessionH;
     CWString           l_cBinFilePath(m_pOutDir);
 
     while (uP7_PROTOCOL_SESSION_UNK == l_uSessionId)
     {
-        l_uSessionId = l_cRand(l_cRd);
+        l_uSessionId = l_cRandSession(l_cRd);
     }
 
     l_uSessionCrc7= GetCrc7((const uint8_t *)&l_uSessionId, sizeof(l_uSessionId));
@@ -395,140 +408,13 @@ int CpreManager::Process()
         return l_eError;
     }
 
-    //create traces ID table to store information about used ID
-    l_pTraceIdMap = (stTraceId *)malloc(MAXUINT16 * sizeof(stTraceId));
-    if (!l_pTraceIdMap)
+
+    l_eError = ScanFunctions();
+    if (eErrorNo != l_eError)
     {
-        printf("ERROR: can't allocate memory\n");
-        return eErrorMemAlloc;
+        return l_eError;
     }
 
-    memset(l_pTraceIdMap, 0, MAXUINT16 * sizeof(stTraceId));
-
-
-    //generate IDs & save binary data
-    l_pFileEl = NULL;
-    while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
-    {
-        CpreFile *l_pFile = m_cFiles.Get_Data(l_pFileEl);
-        if (l_pFile)
-        {
-            CBList<CFuncRoot*> &l_rFunctions = l_pFile->GetFunctions();
-            pAList_Cell         l_pFuncEl    = NULL;
-
-            while ((l_pFuncEl = l_rFunctions.Get_Next(l_pFuncEl)))
-            {
-                CFuncRoot *l_pFunc = l_rFunctions.Get_Data(l_pFuncEl);
-
-                if (stFuncDesc::eType::eTrace == l_pFunc->GetType())
-                {
-                    CFuncTrace *l_pTrace = static_cast<CFuncTrace*>(l_pFunc);
-                               
-                    stTraceId *l_pTraceId = &l_pTraceIdMap[l_pTrace->GetId()];
-                    if (!l_pTraceId->bUsed)
-                    {
-                        l_pTraceId->bUsed = true;
-                        l_pTraceId->pFunc = l_pFunc;
-                    }
-                    else
-                    {
-                        while (l_szTraceIt < MAXUINT16)
-                        {
-                            l_pTraceId = &l_pTraceIdMap[l_szTraceIt];
-                            if (l_pTraceId->bUsed)
-                            {
-                                l_szTraceIt++;
-                            }
-                            else
-                            {
-                                l_pTraceId->bUsed = true;
-                                l_pTraceId->pFunc = l_pFunc;
-                                l_pTrace->SetId((tUINT16)l_szTraceIt);
-                                OSPRINT(TM("INFO: Update trace ID at file {%s}:%d\n"), 
-                                        l_pFile->GetOsPath() + l_szDir, 
-                                        l_pFunc->GetLine());
-
-                                l_szTraceIt++;
-                                break;
-                            }
-                        }
-
-                        if (l_szTraceIt >= MAXUINT16)
-                        {
-                            l_eError = eErrorTraceIdOverFlow;
-
-                            OSPRINT(TM("ERROR: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
-                            printf(" * Line:%d, %s\n", l_pFunc->GetLine(), g_pErrorsText[l_eError]);
-                        }
-                    }
-
-                    pAList_Cell l_pTraceEl = NULL;
-                    bool        l_bAdded   = false;
-                    while ((l_pTraceEl = m_cTraces.Get_Next(l_pTraceEl)))
-                    {
-                        if (m_cTraces.Get_Data(l_pTraceEl)->GetId() >= l_pTrace->GetId())
-                        {
-                            l_bAdded   = true; 
-                            l_pTraceEl = m_cTraces.Get_Prev(l_pTraceEl);
-                            m_cTraces.Add_After(l_pTraceEl, l_pTrace);
-                            break;
-                        }
-                    }
-
-                    if (!l_bAdded)
-                    {
-                        m_cTraces.Add_After(m_cTraces.Get_Last(), l_pTrace);
-                    }
-                }
-                else if (stFuncDesc::eType::eCreateCounter == l_pFunc->GetType())
-                {
-                    CFuncCounter *l_pCounter = static_cast<CFuncCounter*>(l_pFunc);
-
-                    pAList_Cell   l_pCounterEl = NULL;
-                    bool          l_bAdded     = false;
-                    while ((l_pCounterEl = m_cCounters.Get_Next(l_pCounterEl)))
-                    {
-                        if (0 < strcmp(m_cCounters.Get_Data(l_pCounterEl)->GetName(), l_pCounter->GetName()))
-                        {
-                            l_bAdded   = true; 
-                            l_pCounterEl = m_cCounters.Get_Prev(l_pCounterEl);
-                            m_cCounters.Add_After(l_pCounterEl, l_pCounter);
-                            break;
-                        }
-                    }
-
-                    if (!l_bAdded)
-                    {
-                        m_cCounters.Add_After(m_cCounters.Get_Last(), l_pCounter);
-                    }
-
-                }
-                else if (stFuncDesc::eType::eRegisterModule == l_pFunc->GetType())
-                {
-                    CFuncModule *l_pModule = static_cast<CFuncModule*>(l_pFunc);
-                    pAList_Cell  l_pModEl  = NULL;
-                    bool         l_bAdded  = false;
-
-                    while ((l_pModEl = m_cModules.Get_Next(l_pModEl)))
-                    {
-                        if (0 < strcmp(m_cModules.Get_Data(l_pModEl)->GetName(), l_pModule->GetName()))
-                        {
-                            l_bAdded   = true; 
-                            l_pModEl = m_cModules.Get_Prev(l_pModEl);
-                            m_cModules.Add_After(l_pModEl, l_pModule);
-                            break;
-                        }
-                    }
-
-                    if (!l_bAdded)
-                    {
-                        m_cModules.Add_After(m_cModules.Get_Last(), l_pModule);
-                    }
-                    
-                }
-            }
-        }
-    }
 
     //set ID
     if (eErrorNo == l_eError)
@@ -621,8 +507,6 @@ int CpreManager::Process()
         l_eError = CreateIDsHeaderFile(l_uSessionId, l_qwEpochTime, TRUE);
     }
 
-    free(l_pTraceIdMap);
-    l_pTraceIdMap = NULL;
 
     if (l_pOldSession)
     {
@@ -637,6 +521,256 @@ int CpreManager::Process()
     }
 
     return (int)l_eError;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+eErrorCodes CpreManager::ScanFunctions()
+{
+    std::uniform_int_distribution<tUINT16> l_cRandTraceId(0u, MAXUINT16);
+    std::random_device l_cRd;
+
+    pAList_Cell        l_pFileEl       = NULL;
+    eErrorCodes        l_eError        = eErrorNo;
+    size_t             l_szDir         = PStrLen(m_pSrcDir);
+    stTraceId         *l_pTraceIdMap   = NULL;
+    size_t             l_szTraceIt     = 0;
+    size_t             l_szTraceMax    = 0;
+    size_t             l_szTraceIdUsed = 0;
+
+
+    //create traces ID table to store information about used ID
+    l_pTraceIdMap = (stTraceId *)malloc(MAXUINT16 * sizeof(stTraceId));
+    if (!l_pTraceIdMap)
+    {
+        printf("ERROR: can't allocate memory\n");
+        return eErrorMemAlloc;
+    }
+
+    memset(l_pTraceIdMap, 0, MAXUINT16 * sizeof(stTraceId));
+
+
+    //generate IDs & save binary data
+    l_pFileEl = NULL;
+    while ((l_pFileEl = m_cFiles.Get_Next(l_pFileEl)))
+    {
+        CpreFile *l_pFile = m_cFiles.Get_Data(l_pFileEl);
+        if (l_pFile)
+        {
+            CBList<CFuncRoot*> &l_rFunctions = l_pFile->GetFunctions();
+            pAList_Cell         l_pFuncEl    = NULL;
+
+            while ((l_pFuncEl = l_rFunctions.Get_Next(l_pFuncEl)))
+            {
+                CFuncRoot *l_pFunc = l_rFunctions.Get_Data(l_pFuncEl);
+
+                if (stFuncDesc::eType::eTrace == l_pFunc->GetType())
+                {
+                    CFuncTrace *l_pTrace = static_cast<CFuncTrace*>(l_pFunc);
+                               
+                    stTraceId *l_pTraceId = &l_pTraceIdMap[l_pTrace->GetId()];
+                    if (!l_pTraceId->bUsed)
+                    {
+                        if (l_pTrace->GetId() > l_szTraceMax) l_szTraceMax = l_pTrace->GetId();
+
+                        l_pTraceId->bUsed = true;
+                        l_pTraceId->pFunc = l_pTrace;
+                        l_szTraceIdUsed ++;
+                    }
+                    else
+                    {
+                        if (m_bVerbose)
+                        {
+                            OSPRINT(TM("INFO: Trace ID collision {%s}:%d vs {%s}:%d\n"), 
+                                    l_pFile->GetOsPath() + l_szDir, 
+                                    l_pFunc->GetLine(),
+                                    l_pTraceId->pFunc->GetFile()->GetOsPath() + l_szDir,
+                                    l_pTraceId->pFunc->GetLine()
+                                    );
+                        }
+
+                        if (    (m_bConsecutiveId)
+                                //if only 10% of free ID space is available - random selection isn't efficient any more 
+                                //and will consume CPU cycles for nothing - better to switch to continous search
+                             || (l_szTraceIdUsed >= (MAXUINT16/10)) 
+                           )
+                        {
+                            while (l_szTraceIt < MAXUINT16)
+                            {
+                                l_pTraceId = &l_pTraceIdMap[l_szTraceIt];
+                                if (!l_pTraceId->bUsed)
+                                {
+                                    if (l_szTraceIt > l_szTraceMax) l_szTraceMax = l_szTraceIt;
+
+                                    l_pTraceId->bUsed = true;
+                                    l_pTraceId->pFunc = l_pTrace;
+                                    l_pTrace->SetId((tUINT16)l_szTraceIt);
+
+                                    if (m_bVerbose)
+                                    {
+                                        OSPRINT(TM("INFO: Update trace ID at file {%s}:%d\n"), 
+                                                l_pFile->GetOsPath() + l_szDir, 
+                                                l_pFunc->GetLine());
+                                    }
+
+                                    l_szTraceIdUsed++;
+                                    l_szTraceIt++;
+                                    break;
+                                }
+                                else
+                                {
+                                    l_szTraceIt++;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            while (l_szTraceIdUsed < MAXUINT16)
+                            {
+                                l_szTraceIt = l_cRandTraceId(l_cRd);
+                                l_pTraceId = &l_pTraceIdMap[l_szTraceIt];
+                                if (!l_pTraceId->bUsed)
+                                {
+                                    l_pTraceId->bUsed = true;
+                                    l_pTraceId->pFunc = l_pTrace;
+                                    l_pTrace->SetId((tUINT16)l_szTraceIt);
+                                    l_szTraceIdUsed++;
+
+                                    if (m_bVerbose)
+                                    {
+                                        OSPRINT(TM("INFO: Update trace ID at file {%s}:%d\n"), 
+                                                l_pFile->GetOsPath() + l_szDir, 
+                                                l_pFunc->GetLine());
+                                    }
+
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (l_szTraceIdUsed >= MAXUINT16)
+                        {
+                            l_eError = eErrorTraceIdOverFlow;
+
+                            OSPRINT(TM("ERROR: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
+                            printf(" * Line:%d, %s\n", l_pFunc->GetLine(), g_pErrorsText[l_eError]);
+                        }
+                    }
+
+                    pAList_Cell l_pTraceEl = NULL;
+                    bool        l_bAdded   = false;
+                    while ((l_pTraceEl = m_cTraces.Get_Next(l_pTraceEl)))
+                    {
+                        if (m_cTraces.Get_Data(l_pTraceEl)->GetId() >= l_pTrace->GetId())
+                        {
+                            l_bAdded   = true; 
+                            l_pTraceEl = m_cTraces.Get_Prev(l_pTraceEl);
+                            m_cTraces.Add_After(l_pTraceEl, l_pTrace);
+                            break;
+                        }
+                    }
+
+                    if (!l_bAdded)
+                    {
+                        m_cTraces.Add_After(m_cTraces.Get_Last(), l_pTrace);
+                    }
+                }
+                else if (stFuncDesc::eType::eCreateCounter == l_pFunc->GetType())
+                {
+                    CFuncCounter *l_pCounter = static_cast<CFuncCounter*>(l_pFunc);
+
+                    pAList_Cell   l_pCounterEl = NULL;
+                    bool          l_bAdded     = false;
+                    while ((l_pCounterEl = m_cCounters.Get_Next(l_pCounterEl)))
+                    {
+                        if (0 < strcmp(m_cCounters.Get_Data(l_pCounterEl)->GetName(), l_pCounter->GetName()))
+                        {
+                            l_bAdded   = true; 
+                            l_pCounterEl = m_cCounters.Get_Prev(l_pCounterEl);
+                            m_cCounters.Add_After(l_pCounterEl, l_pCounter);
+                            break;
+                        }
+                    }
+
+                    if (!l_bAdded)
+                    {
+                        m_cCounters.Add_After(m_cCounters.Get_Last(), l_pCounter);
+                    }
+
+                }
+                else if (stFuncDesc::eType::eRegisterModule == l_pFunc->GetType())
+                {
+                    CFuncModule *l_pModule = static_cast<CFuncModule*>(l_pFunc);
+                    pAList_Cell  l_pModEl  = NULL;
+                    bool         l_bAdded  = false;
+
+                    while ((l_pModEl = m_cModules.Get_Next(l_pModEl)))
+                    {
+                        if (0 < strcmp(m_cModules.Get_Data(l_pModEl)->GetName(), l_pModule->GetName()))
+                        {
+                            l_bAdded   = true; 
+                            l_pModEl = m_cModules.Get_Prev(l_pModEl);
+                            m_cModules.Add_After(l_pModEl, l_pModule);
+                            break;
+                        }
+                    }
+
+                    if (!l_bAdded)
+                    {
+                        m_cModules.Add_After(m_cModules.Get_Last(), l_pModule);
+                    }
+                    
+                }
+            }
+        }
+    }
+
+    if (m_bConsecutiveId)
+    {
+        for (size_t l_szI = 0; l_szI < l_szTraceMax; l_szI++)    
+        {
+            stTraceId *l_pFreeId = &l_pTraceIdMap[l_szI];
+            if (!l_pFreeId->bUsed)
+            {
+                while ((l_szTraceMax != l_szI) && (!l_pTraceIdMap[l_szTraceMax].bUsed))
+                {
+                    l_szTraceMax--;
+                }
+
+                if (l_szI < l_szTraceMax)
+                {
+                    l_pFreeId->bUsed = true; 
+                    l_pFreeId->pFunc = l_pTraceIdMap[l_szTraceMax].pFunc;
+
+                    l_pFreeId->pFunc->SetId((tUINT16)l_szI);
+
+                    if (m_bVerbose)
+                    {
+                        OSPRINT(TM("INFO: Trace ID {%s}:%d relocation %zu->%zu\n"), 
+                                l_pFreeId->pFunc->GetFile()->GetOsPath() + l_szDir, 
+                                l_pFreeId->pFunc->GetLine(),
+                                l_szTraceMax,
+                                l_szI
+                                );
+                    }
+
+                    l_pTraceIdMap[l_szTraceMax].pFunc = nullptr;
+                    l_pTraceIdMap[l_szTraceMax].bUsed = false;
+                    l_szTraceMax--;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+    }
+
+
+    free(l_pTraceIdMap);
+    l_pTraceIdMap = NULL;
+
+    return l_eError;
 }
 
 
@@ -756,6 +890,7 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
         "////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////\n"
         "#ifndef UP7_TARGET_CPU_H\n"
         "#define UP7_TARGET_CPU_H\n\n"
+        "%s"
         uP7_SESSION_TXT "%u;\n"
         uP7_CRC7_TXT "%u;\n";
     
@@ -816,6 +951,7 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
                                    l_uHour,
                                    l_uMinutes,
                                    l_uSeconds,
+                                   (m_bConsecutiveId) ? "#define UP7_CONSECUTIVE_TRACE_ID\n\n" : "",
                                    i_uSession,
                                    (tUINT32)i_uSessionCrc7
                                   );
@@ -827,7 +963,6 @@ eErrorCodes CpreManager::CreateDescriptionHeaderFile(tUINT32       i_uSession,
             l_eError = eErrorFileWrite;
         }
     }
-
 
     if (eErrorNo == l_eError)
     {
@@ -1491,11 +1626,14 @@ eErrorCodes CpreManager::CheckDuplicates()
                     {
                         if (0 == strcmp(l_cModules.Get_Data(l_pModEl)->GetName(), l_pMod->GetName()))
                         {
-                            //OSPRINT(TM("ERROR: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
-                            //printf(" * Line:%d, %s\n", l_pMod->GetLine(), g_pErrorsText[l_eError]);
-                            //OSPRINT(TM(" * Conflicted with {%s}:%d\n"), 
-                            //        l_cModules.Get_Data(l_pModEl)->GetFile()->GetOsPath() + l_szDir, 
-                            //        l_cModules.Get_Data(l_pModEl)->GetLine());
+                            if (m_bVerbose)
+                            {
+                                OSPRINT(TM("WARNING: at file {%s}\n"), l_pFile->GetOsPath() + l_szDir);
+                                printf(" * Line:%d, register module call duplicate\n", l_pMod->GetLine());
+                                OSPRINT(TM(" * Conflicted with {%s}:%d\n"), 
+                                        l_cModules.Get_Data(l_pModEl)->GetFile()->GetOsPath() + l_szDir, 
+                                        l_cModules.Get_Data(l_pModEl)->GetLine());
+                            }
                             
 
                             pAList_Cell l_pFuncPrevEl = l_rFunctions.Get_Prev(l_pFuncEl);

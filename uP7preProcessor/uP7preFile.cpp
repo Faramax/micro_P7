@@ -59,26 +59,65 @@ CpreFile::CpreFile(CpreManager *i_pManager, const tXCHAR *i_pName, eErrorCodes &
                     )
         )
     {
-        tUINT64 l_qwFileSize = l_cFile.Get_Size();
+        tUINT64 l_qwFileSize   = l_cFile.Get_Size();
          
         if (l_qwFileSize < MAX_FILE_SIZE)
         {
             m_szData = (size_t)l_qwFileSize;
-            m_pData  = (tUINT8*)malloc((size_t)m_szData + 1);
-            if ((size_t)m_szData == l_cFile.Read(m_pData, (size_t)m_szData))
+            m_pData  = (tUINT8*)malloc(m_szData + 1);
+
+            if (m_pData)
             {
-                m_pData[(size_t)m_szData] = 0;
+                if (m_szData == l_cFile.Read(m_pData, m_szData))
+                {
+                    m_pData[m_szData] = 0;
 
-                CKeccak l_cHash;
-                l_cHash.UpdateB(m_pData, (size_t)m_szData);
-                l_cHash.Get_HashB(m_pHash, sizeof(m_pHash));
+                    uint8_t *l_pNormalized = (uint8_t*)malloc(m_szData + 1);
 
-                Parse();
+                    if (l_pNormalized)
+                    {
+                        tUINT8 *l_pItSrc = m_pData;
+                        tUINT8 *l_pItDst = l_pNormalized;
+                        while (*l_pItSrc)
+                        {
+                            if ('\r' == *l_pItSrc)
+                            {
+                                ++l_pItSrc;
+                            }
+                            else
+                            {
+                                *l_pItDst = *l_pItSrc;
+
+                                l_pItDst ++;
+                                l_pItSrc++;
+                            }
+                        }
+
+                        CKeccak l_cHash;
+                        l_cHash.UpdateB(l_pNormalized, l_pItDst - l_pNormalized);
+                        l_cHash.Get_HashB(m_pHash, sizeof(m_pHash));
+
+                        free(l_pNormalized);
+
+                        Parse();
+
+                    }
+                    else
+                    {
+                        OSPRINT(TM("ERROR: Can't allocate memory {%s}\n"), i_pName);
+                        m_eError = eErrorFileRead;
+                    }
+                }
+                else
+                {
+                    OSPRINT(TM("ERROR: Can't read file {%s}\n"), i_pName);
+                    m_eError = eErrorFileRead;
+                }
             }
             else
             {
-                OSPRINT(TM("ERROR: Can't read file {%s}\n"), i_pName);
-                m_eError = eErrorFileRead;
+                OSPRINT(TM("ERROR: Can't allocate memory for file {%s}\n"), i_pName);
+                m_eError = eErrorMemAlloc;
             }
         }
         else
@@ -492,7 +531,7 @@ tBOOL CpreFile::Parse()
 
     while (*l_pIt)
     {
-        if (0xA == *l_pIt)
+        if (0xA == *l_pIt)  // \n
         {
             if (eComment::eLine == l_eComment)
             {
