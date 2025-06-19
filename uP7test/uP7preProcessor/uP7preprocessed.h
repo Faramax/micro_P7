@@ -2,13 +2,13 @@
 //                                                     WARNING!                                                       //
 //                                       this header is automatically generated                                       //
 //                                                 DO NOT MODIFY IT                                                   //
-//                                           Generated: 2021.08.13 19:43:58                                           //
+//                                           Generated: 2021.11.21 19:25:57                                           //
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_TARGET_CPU_H
 #define UP7_TARGET_CPU_H
 
-uint32_t g_uSessionId = 2984027384;
-uint8_t  g_bCrc7 = 73;
+uint32_t g_uSessionId = 3393442151;
+uint8_t  g_bCrc7 = 126;
 
 
 size_t g_szModules = 5;
@@ -65,23 +65,24 @@ static const struct stuP7arg g_pArgsId30[] = { {(uint8_t)euP7_arg_int64, 8}, {(u
 static const struct stuP7arg g_pArgsId31[] = { {(uint8_t)euP7_arg_int16, 4}, {(uint8_t)euP7_arg_int16, 4}, {(uint8_t)euP7_arg_int16, 4} };
 static const struct stuP7arg g_pArgsId32[] = { {(uint8_t)euP7_arg_int16, 4} };
 static const struct stuP7arg g_pArgsId33[] = { {(uint8_t)euP7_arg_int16, 4}, {(uint8_t)euP7_arg_int16, 4} };
-static const struct stuP7arg g_pArgsId34[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
-static const struct stuP7arg g_pArgsId35[] = { {(uint8_t)euP7_arg_int32, 4} };
-static const struct stuP7arg g_pArgsId36[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
-static const struct stuP7arg g_pArgsId37[] = { {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int64, 8} };
-static const struct stuP7arg g_pArgsId38[] = { {(uint8_t)euP7_arg_int64, 8} };
-static const struct stuP7arg g_pArgsId39[] = { {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int64, 8} };
-static const struct stuP7arg g_pArgsId40[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
-static const struct stuP7arg g_pArgsId41[] = { {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8} };
-static const struct stuP7arg g_pArgsId42[] = { {(uint8_t)euP7_arg_str_utf8, 0}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_str_utf8, 3}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_intmax, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int8, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int16, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_str_utf8, 0}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_int64, 8} };
-static const struct stuP7arg g_pArgsId43[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
-static const struct stuP7arg g_pArgsId44[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
+static const struct stuP7arg g_pArgsId34[] = { {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int64, 8} };
+static const struct stuP7arg g_pArgsId35[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
+static const struct stuP7arg g_pArgsId36[] = { {(uint8_t)euP7_arg_int32, 4} };
+static const struct stuP7arg g_pArgsId37[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
+static const struct stuP7arg g_pArgsId38[] = { {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int64, 8} };
+static const struct stuP7arg g_pArgsId39[] = { {(uint8_t)euP7_arg_int64, 8} };
+static const struct stuP7arg g_pArgsId40[] = { {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int64, 8} };
+static const struct stuP7arg g_pArgsId41[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
+static const struct stuP7arg g_pArgsId42[] = { {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_double, 8} };
+static const struct stuP7arg g_pArgsId43[] = { {(uint8_t)euP7_arg_str_utf8, 0}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_str_utf8, 3}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_intmax, 8}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int8, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int16, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_str_utf8, 0}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_double, 8}, {(uint8_t)euP7_arg_int64, 8} };
+static const struct stuP7arg g_pArgsId44[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
 static const struct stuP7arg g_pArgsId45[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
 static const struct stuP7arg g_pArgsId46[] = { {(uint8_t)euP7_arg_int32, 4} };
 static const struct stuP7arg g_pArgsId47[] = { {(uint8_t)euP7_arg_int32, 4} };
-static const struct stuP7arg g_pArgsId55[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_str_utf8, 0} };
+static const struct stuP7arg g_pArgsId49[] = { {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4}, {(uint8_t)euP7_arg_int32, 4} };
+static const struct stuP7arg g_pArgsId55[] = { {(uint8_t)euP7_arg_int64, 8}, {(uint8_t)euP7_arg_str_utf8, 0} };
 
-size_t g_szTraces = 50;
+size_t g_szTraces = 51;
 struct stuP7Trace g_pTraces[] = 
 {
     {0, sizeof(g_pArgsId0)/sizeof(struct stuP7arg), g_pArgsId0},
@@ -133,7 +134,8 @@ struct stuP7Trace g_pTraces[] =
     {46, sizeof(g_pArgsId46)/sizeof(struct stuP7arg), g_pArgsId46},
     {47, sizeof(g_pArgsId47)/sizeof(struct stuP7arg), g_pArgsId47},
     {48, 0, NULL},
+    {49, sizeof(g_pArgsId49)/sizeof(struct stuP7arg), g_pArgsId49},
     {55, sizeof(g_pArgsId55)/sizeof(struct stuP7arg), g_pArgsId55}
 };
-//uint64_t g_uEpochTime = 0x1d790732d53e2b0;
-#endif //UP7_TARGET_CPU_H:A94A52075A41BD7F436763EAAD39ACDB5CC4868E2D3A68C56F76D479ADCD2188
+//uint64_t g_uEpochTime = 0x1d7df053a600200;
+#endif //UP7_TARGET_CPU_H:99DC440C4B9A5C1BAB6F03F72A88AE0A6A828542778EF04EF8A135D823A518C3

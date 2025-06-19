@@ -69,7 +69,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         return -1;
     }
 
-    IuP7proxy *l_iProxy = uP7createProxy(TM("/P7.Verb=0 /P7.Sink=Baical /P7.Pool=1024"), i_pArgV[1]);
+    IuP7proxy *l_iProxy = uP7createProxy(TM("/P7.Verb=4 /P7.Sink=Baical /P7.Pool=1024"), i_pArgV[1]);
 
     l_iProxy->RegisterCpu(1, false, CpuTimerFrequency(), TM("CPU simulation example"), 0xFFFF, true, g_pFifo);
 

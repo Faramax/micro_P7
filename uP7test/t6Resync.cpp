@@ -148,8 +148,8 @@ bool t6Resync(const tXCHAR *i_pSessionFolder)
     tXCHAR      l_pArgs[4096];
     bool        l_bReturn = true;
 
-    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=0 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Pool=16384"), l_qwAdd);
-    //PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=0 /P7.Sink=Baical /P7.Pool=16384"), 0);
+    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=4 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Pool=16384"), l_qwAdd);
+    //PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=4 /P7.Sink=Baical /P7.Pool=16384"), 0);
 
     IuP7proxy *l_iProxy = uP7createProxy(l_pArgs, i_pSessionFolder);
     IuP7Fifo  *l_iFifo  = NULL; 

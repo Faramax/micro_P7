@@ -33,7 +33,7 @@ bool     t3sendPacket(void *i_pCtx, enum euP7packetRank i_eRank, const struct st
 bool t3Performance(const tXCHAR *i_pSessionFolder)
 {
     const uint8_t l_bCpuId = 1;
-    IuP7proxy    *l_iProxy = uP7createProxy(TM("/P7.Verb=0 /P7.Sink=FileBin /P7.Dir=D:/T3Perf /P7.Pool=4096"), i_pSessionFolder);
+    IuP7proxy    *l_iProxy = uP7createProxy(TM("/P7.Verb=4 /P7.Sink=FileBin /P7.Files=2 /P7.Dir=. /P7.Pool=4096"), i_pSessionFolder);
     IuP7Fifo     *l_pFifo  = NULL;
 
     if (!l_iProxy)

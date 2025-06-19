@@ -1010,7 +1010,7 @@ eClient_Status CClient::Init_Crash_Handler(tXCHAR **i_pArgs, tINT32 i_iCount)
                 }
                 else
                 {
-                    JOURNAL_ERROR(m_pLog, TM("There is no free space for client"));
+                    JOURNAL_WARNING(m_pLog, TM("There is no free space for client"));
                 }
             }
             else

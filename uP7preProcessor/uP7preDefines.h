@@ -106,6 +106,7 @@ enum eErrorCodes
 #define XML_ATTE_OPTIONS_PROJECT_NAME                TM("Name")
 #define XML_ATTE_OPTIONS_PROJECT_BITS                TM("Bits")
 #define XML_ATTE_OPTIONS_PROJECT_WCHAR               TM("wchar_t")
+#define XML_ATTE_OPTIONS_PROJECT_TEST_MODE           TM("TestMode")
 #define XML_ATTE_OPTIONS_PROJECT_IDS                 TM("IDsHeader")
 
 #define XML_NODE_OPTIONS_PROCESS                  TM("Process")

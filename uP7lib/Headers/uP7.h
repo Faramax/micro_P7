@@ -366,7 +366,6 @@ bool uP7TrcSent(uint16_t       i_wId,
           N.B: please do not change it, it is assigned automatically by uP7preProcessor tool!
  * @param i_eLevel [in] trace level
  * @param i_hModule [in] module
- * @param i_pFormat [in] format string
  * @param i_pVa_List [in] variable arguments list
  * @return true - success, false - failure
 */

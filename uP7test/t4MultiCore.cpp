@@ -156,7 +156,7 @@ bool t4MultiCore(uint8_t i_bCount, const tXCHAR *i_pSessionFolder)
     uint64_t  l_qwAdd = (uint64_t)(&l_cP7Sink);
     tXCHAR    l_pArgs[4096];
 
-    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=0 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Eto=0 /P7.Pool=16384"), l_qwAdd);
+    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=5 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Eto=0 /P7.Pool=16384"), l_qwAdd);
 
     IuP7proxy *l_iProxy = uP7createProxy(l_pArgs, i_pSessionFolder);
 

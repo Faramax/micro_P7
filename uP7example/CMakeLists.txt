@@ -14,10 +14,18 @@ add_executable(${PROJECT_NAME}
                host.cpp
               )
 
-add_custom_command(TARGET ${PROJECT_NAME}
-                   PRE_BUILD
-                   COMMAND uP7preProcessor "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/uP7Preprocessor.xml" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor"
-                  )
+if(MSVC)
+    add_custom_command(TARGET ${PROJECT_NAME}
+                    PRE_BUILD
+                    COMMAND uP7preProcessor "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/uP7Preprocessor.xml" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor"
+                    )
+else()
+    add_custom_target(ExamplePreProcessor 
+                    COMMAND uP7preProcessor "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/uP7Preprocessor.xml" "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor"
+                    )
+
+    add_dependencies(${PROJECT_NAME} ExamplePreProcessor)
+endif()
 
 target_link_libraries (${PROJECT_NAME} uP7proxy p7 uP7)
 

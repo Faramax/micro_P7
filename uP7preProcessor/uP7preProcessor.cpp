@@ -238,8 +238,17 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         }
         else
         {
-            printf("uP7preProcessor config file opening/parsing error: unknown Wchar size\n");
+            printf("uP7preProcessor config file opening/parsing error: unknown wchar_t size\n");
             l_iReturn = eErrorXmlParsing;
+        }
+
+        tXCHAR *l_pTestMode = NULL;
+        if (    (Cfg::eOk == l_pCPU->GetAttrText(XML_ATTE_OPTIONS_PROJECT_TEST_MODE, &l_pTestMode))
+             && (0 == PStrICmp(l_pTestMode, TM("true")))
+           )
+        {
+            l_cManager.SetTargetCpuWCharBitsCount(sizeof(wchar_t)*8);
+            l_cManager.SetTargetCpuBitsCount(sizeof(void*)*8);
         }
 
         tXCHAR *l_pIdsHeader = NULL;

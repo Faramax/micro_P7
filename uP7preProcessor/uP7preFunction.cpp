@@ -20,7 +20,7 @@ CFuncRoot::CFuncRoot(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_pStar
     : m_pFile(i_pFile)
     , m_pDesc(i_pDesc)
     , m_iLine(i_iLine)
-    , m_pFunction(OSSTRDUP(i_pFunctionName))
+    , m_pFunction(OSSTRDUP(i_pFunctionName ? i_pFunctionName : "Unknown"))
     , m_eError(eErrorNo)
     , m_bUpdated(false)
 {
@@ -824,14 +824,21 @@ void CFuncTrace::ParseFormat()
                                 ADD_ARG(P7TRACE_ARG_TYPE_INT64, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT64), l_bSuccess);
                             }
                         }
-                        else if  (EPREFIX_TYPE_I32 == l_ePrefix)
+                        else if (EPREFIX_TYPE_I32 == l_ePrefix)
                         {
                             //4 bytes integer
                             ADD_ARG(P7TRACE_ARG_TYPE_INT32, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT32), l_bSuccess);
                         }
                         else if (EPREFIX_TYPE_I  == l_ePrefix)
                         {
-                            ADD_ARG(P7TRACE_ARG_TYPE_INT32, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT32), l_bSuccess);
+                            if (m_szTargetCpuBytes < 8)
+                            {
+                                ADD_ARG(P7TRACE_ARG_TYPE_INT32, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT32), l_bSuccess);
+                            }
+                            else
+                            {
+                                ADD_ARG(P7TRACE_ARG_TYPE_INT64, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT64), l_bSuccess);
+                            }
                         }
                         else if (EPREFIX_TYPE_J == l_ePrefix)
                         {

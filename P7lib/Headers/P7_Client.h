@@ -149,11 +149,12 @@
 //                          general settings                                   /
 ////////////////////////////////////////////////////////////////////////////////
 //Values:
-// 0 : Debug
-// 1 : Info
-// 2 : Warnings
-// 3 : Errors
-// 4 : Critical
+// 0 : Trace
+// 1 : Debug
+// 2 : Info
+// 3 : Warnings
+// 4 : Errors
+// 5 : Critical
 // default: logging is off
 #define CLIENT_COMMAND_LOG_VERBOSITY                           TM("/P7.Verb=")
 

@@ -555,7 +555,7 @@ tBOOL CpreFile::Parse()
                     if (l_pBlock)
                     {
                         l_pBlock->iBrakets --;
-                        if (!l_pBlock->iBrakets)
+                        if (0 >= l_pBlock->iBrakets)
                         {
                             m_cBlocks.Del(l_pEl, TRUE);
                         }
@@ -573,7 +573,10 @@ tBOOL CpreFile::Parse()
                 {
                     size_t      l_szLen     = 0;
                     const char *l_pFuncName = GetFunctionName((const char*)m_pData, l_pIt, l_szLen);
-                    m_cBlocks.Push_Last(new stBlock(TRUE, l_pFuncName, l_szLen));
+                    if (l_pFuncName)
+                    {
+                        m_cBlocks.Push_Last(new stBlock(TRUE, l_pFuncName, l_szLen));
+                    }
                 }
             }
             else if (';' == *l_pIt) //probably end of the function declaration
@@ -751,6 +754,12 @@ const char* CpreFile::GetFunctionName(const char* i_pHead, const char *i_pCurPos
         i_pCurPos --;
         o_rLength ++;
     }
+
+    if (!o_rLength)
+    {
+        return nullptr;
+    }
+
 
     if (i_pHead != i_pCurPos)
     {
