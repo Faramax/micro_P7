@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
@@ -153,7 +152,7 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
     uint64_t      l_qwAdd = (uint64_t)(&l_cP7Sink);
     tXCHAR        l_pArgs[4096];
 
-    PSPrint(l_pArgs, 4096, TM("/P7.Verb=0 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Eto=0 /P7.Pool=4096"), l_qwAdd);
+    PSPrint(l_pArgs, 4096, TM("/P7.Verb=4 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Eto=0 /P7.Pool=4096"), l_qwAdd);
 
     IuP7proxy *l_iProxy = uP7createProxy(l_pArgs, i_pSessionFolder);
     IuP7Fifo  *l_pFifo  = NULL;
@@ -215,12 +214,12 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
         }
     });
 
-    uP7TRC(2, l_hModule1, "String: %.10ls (%%.10ls = ([x]s is unsupported by uP7))", L"12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(5, l_hModule1, "String: %s (%%s = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(0, l_hModule1, "String: %.*s (%%.*s = ([x]s is unsupported by uP7))", 0, "12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(1, l_hModule1, "String: %ls (%%ls = 12345 abcde .. z // \\ ABCDE .. Z)", L"12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(3, l_hModule1, "String: %hs (%%hs = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
-    uP7TRC(4, l_hModule1, "String: %.10hs (%%.10hs = ([x]s is unsupported by uP7))", "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(0, l_hModule1, "String: %.10ls (%%.10ls = ([x]s is unsupported by uP7))", L"12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(1, l_hModule1, "String: %s (%%s = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(2, l_hModule1, "String: %.*s (%%.*s = ([x]s is unsupported by uP7))", 0, "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(3, l_hModule1, "String: %ls (%%ls = 12345 abcde .. z // \\ ABCDE .. Z)", L"12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(4, l_hModule1, "String: %hs (%%hs = 12345 abcde .. z // \\ ABCDE .. Z)", "12345 abcde .. z // \\ ABCDE .. Z");
+    uP7TRC(5, l_hModule1, "String: %.10hs (%%.10hs = ([x]s is unsupported by uP7))", "12345 abcde .. z // \\ ABCDE .. Z");
     uP7TRC(6, l_hModule1, "String: %ws (%%ws = 12345 abcde .. z // \\ ABCDE .. Z)", L"12345 abcde .. z // \\ ABCDE .. Z");
     uP7TRC(7, l_hModule1, "String: %.10ws (%%.10ws = ([x]s is unsupported by uP7))", L"12345 abcde .. z // \\ ABCDE .. Z");
 
@@ -308,39 +307,41 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
     uP7TRC(32, l_hModule1, "Octal  %ho (%%ho = 77674)", (tUINT16)32700);
     uP7TRC(33, l_hModule1, "Hex  %hx (%%hx = AABB) | %hX (%%hX = AABB)", (tUINT16)0xAABB, (tUINT16)0xAABB);
 
-    uP7TRC(34, l_hModule1, "Decamical %I32d (%%I32d = 1234567890) | %I32i (%%I32i = 1234567890) | %I32u (%%I32u = 1234567890) ", 
+    uP7TRC(34, l_hModule1, "Hex  %zx (%%zx = AABB) | %zX (%%zX = AABB)", (size_t)0xAABB, (size_t)0xAABB);
+
+    uP7TRC(35, l_hModule1, "Decamical %I32d (%%I32d = 1234567890) | %I32i (%%I32i = 1234567890) | %I32u (%%I32u = 1234567890) ", 
                           (tINT32)1234567890,
                           (tINT32)1234567890,
                           (tUINT32)1234567890
                          );
 
-    uP7TRC(35, l_hModule1, "Octal  %I32o (%%I32o = 11145401322)", (tUINT32)1234567890);
+    uP7TRC(36, l_hModule1, "Octal  %I32o (%%I32o = 11145401322)", (tUINT32)1234567890);
 
 
-    uP7TRC(36, l_hModule1, "Hex  %I32x (%%I32x = 499602d2) | %I32X (%%I32X = 499602D2)", 
+    uP7TRC(37, l_hModule1, "Hex  %I32x (%%I32x = 499602d2) | %I32X (%%I32X = 499602D2)", 
                           (tUINT32)1234567890,
                           (tUINT32)1234567890
                          );
 
-    uP7TRC(37, l_hModule1, "Decamical %I64d (%%I64d = 1234567890987) | %I64i (%%I64i = 1234567890987)", 
+    uP7TRC(38, l_hModule1, "Decamical %I64d (%%I64d = 1234567890987) | %I64i (%%I64i = 1234567890987)", 
                           (tINT64)1234567890987ULL,
                           (tINT64)1234567890987ULL
                          );
 
-    uP7TRC(38, l_hModule1, "Octal  %I64o (%%I64o = 21756176604053)", 
+    uP7TRC(39, l_hModule1, "Octal  %I64o (%%I64o = 21756176604053)", 
                           (tUINT64)1234567890987ULL
                          );
 
-    uP7TRC(39, l_hModule1, "Hex  %llx (%%llx = ffaabbccee12) | %llX (%%llX = FFAABBCCEE12)",
+    uP7TRC(40, l_hModule1, "Hex  %llx (%%llx = ffaabbccee12) | %llX (%%llX = FFAABBCCEE12)",
                           (tUINT64)0xffaabbccee12ULL,
                           (tUINT64)0xFFAABBCCEE12ULL
                          );
 
-    uP7TRC(40, l_hModule1, "Bin %b (%%b = 10101010101010101) | %#b (%%#b = b10101010101010101)",
+    uP7TRC(41, l_hModule1, "Bin %b (%%b = 10101010101010101) | %#b (%%#b = b10101010101010101)",
                           (tUINT32)0x15555,
                           (tUINT32)0x15555
                          );
-    uP7TRC(41, l_hModule1, "%f (%%f 123456.7890) | %e (%%e) | %E (%%E) | %G (%%G) | %g (%%g) | %A (%%A) | %a (%%a)", 
+    uP7TRC(42, l_hModule1, "%f (%%f 123456.7890) | %e (%%e) | %E (%%E) | %G (%%G) | %g (%%g) | %A (%%A) | %a (%%a)", 
                           (tDOUBLE)123456.7890,
                           (tDOUBLE)123456.7890,
                           (tDOUBLE)123456.7890,
@@ -351,7 +352,7 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
                          );
 
 
-    uP7TRC(42, l_hModule1, "%s (String1), %.*s ([x]s is unsupported by uP7) %d(1), %d(2), %d(3), %d(4) "
+    uP7TRC(43, l_hModule1, "%s (String1), %.*s ([x]s is unsupported by uP7) %d(1), %d(2), %d(3), %d(4) "
                            "%I64X(ABCDEF12345678) %d(5), %d(6), %d(7), %d(8) "
                            "%llx(abcdef12345678) %d(9), %d(10), %d(11), %d(12) "
                            "%f(987654321.12345), %d(13), %jd(100500), %d(14), %d(15), %d(16) "
@@ -401,20 +402,20 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
                          );
 
 
-        uP7TRC(43, l_hModule1, "Hex  %#X (%%#X = 0xDEADBEEF) | {%#*X} (%%#*X = {  0xDEADBEEF}})",
+        uP7TRC(44, l_hModule1, "Hex  %#X (%%#X = 0xDEADBEEF) | {%#*X} (%%#*X = {  0xDEADBEEF}})",
                           (tUINT32)0xDEADBEEF,
                           12,
                           (tUINT32)0xDEADBEEF
                          );
 
-        uP7TRC(44, l_hModule1, "Hex  %#012X (%%#012X = 0x00DEADBEEF) | {%#-*.*X} (%%#-14.10X = {0x00DEADBEEF  }})",
+        uP7TRC(45, l_hModule1, "Hex  %#012X (%%#012X = 0x00DEADBEEF) | {%#-*.*X} (%%#-14.10X = {0x00DEADBEEF  }})",
                           (tUINT32)0xDEADBEEF,
                           14,
                           10,
                           (tUINT32)0xDEADBEEF
                          );
 
-        uP7TRC(45, l_hModule1, "Hex  {%+10d} (%%+10d = {  +1234567}) | {%+*.*d} (%%+*.*d = { +0001234567}})",
+        uP7TRC(46, l_hModule1, "Hex  {%+10d} (%%+10d = {  +1234567}) | {%+*.*d} (%%+*.*d = { +0001234567}})",
                           (tUINT32)1234567,
                           12,
                           10,
@@ -481,6 +482,7 @@ bool t2Format(const tXCHAR *i_pSessionFolder)
          || (!l_cP7Sink.IsPattern(TM("Decamical 32700 (%hd = 32700) | 32700 (%hi = 32700) | 65500 (%hu = 65500) ")))
          || (!l_cP7Sink.IsPattern(TM("Octal  77674 (%ho = 77674)")))
          || (!l_cP7Sink.IsPattern(TM("Hex  AABB (%hx = AABB) | AABB (%hX = AABB)")))
+         || (!l_cP7Sink.IsPattern(TM("Hex  AABB (%zx = AABB) | AABB (%zX = AABB)")))
          || (!l_cP7Sink.IsPattern(TM("Decamical 1234567890 (%I32d = 1234567890) | 1234567890 (%I32i = 1234567890) | 1234567890 (%I32u = 1234567890) ")))
          || (!l_cP7Sink.IsPattern(TM("Octal  11145401322 (%I32o = 11145401322)")))
          || (!l_cP7Sink.IsPattern(TM("Hex  499602d2 (%I32x = 499602d2) | 499602D2 (%I32X = 499602D2)")))

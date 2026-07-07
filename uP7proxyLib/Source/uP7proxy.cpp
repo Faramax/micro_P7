@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -46,6 +45,8 @@ CuP7proxy::CuP7proxy(const tXCHAR *i_pArgs, const tXCHAR *i_puP7Dir, bool &o_rEr
     , m_cClientsFull()
     , m_bProcThread(FALSE)
     , m_hProcThread(0)
+    , m_bManageThread(FALSE)
+    , m_hManageThread(0)
 {
 
     m_pP7Client = P7_Create_Client(i_pArgs);
@@ -125,26 +126,37 @@ CuP7proxy::CuP7proxy(const tXCHAR *i_pArgs, const tXCHAR *i_puP7Dir, bool &o_rEr
                 {
                     if (l_stHdr.uVersion == SESSION_ID_FILE_VER)
                     {
-                        stPreProcessorFile *l_pFile = m_cFiles.Find(l_stHdr.uSessionId);
-                        if (!l_pFile)
+                        if (l_stHdr.uSize == sizeof(stuP7SessionFileHeader))
                         {
-                            m_cFiles.Push(new stPreProcessorFile(l_pFileName, l_stHdr.uSessionId, l_stHdr.uCrc7), 
-                                          l_stHdr.uSessionId);
-                            l_pFileName = NULL;
-                            l_szCount ++;
+                            stPreProcessorFile *l_pFile = m_cFiles.Find(l_stHdr.uSessionId);
+                            if (!l_pFile)
+                            {
+                                m_cFiles.Push(new stPreProcessorFile(l_pFileName, l_stHdr.uSessionId, l_stHdr.uCrc7), 
+                                              l_stHdr.uSessionId);
+                                l_pFileName = NULL;
+                                l_szCount ++;
+                            }
+                            else
+                            {
+                                uERROR(TM("Session ID collision for files: {%s}<>{%s}"), 
+                                       l_pFileName->Get(), 
+                                       l_pFile->pFileName->Get());
+                            }
                         }
                         else
                         {
-                            uERROR(TM("Session ID collision for files: {%s}<>{%s}"), 
-                                   l_pFileName->Get(), 
-                                   l_pFile->pFileName->Get());
+                            uERROR(TM("Session file header size is unexpected: {%s} %u!=%u"), 
+                                l_pFileName->Get(), 
+                                l_stHdr.uSize,
+                                (uint32_t)sizeof(stuP7SessionFileHeader));
                         }
                     }
                     else
                     {
-                        uERROR(TM("Session file version is unsupported: {%s} ver:%u"), 
+                        uERROR(TM("Session file version is unsupported: {%s} ver:%u, expected version:%u"), 
                                l_pFileName->Get(), 
-                               l_stHdr.uVersion);
+                               l_stHdr.uVersion,
+                               SESSION_ID_FILE_VER);
                     }
                 }
                 else
@@ -285,6 +297,10 @@ bool CuP7proxy::RegisterCpu(uint8_t       i_bCpuId,
         }
         m_cLock.Unlock();
     }
+    else
+    {
+        uERROR(TM("RegisterCpu %s(%u) command timeout!"), i_pName, (uint32_t)i_bCpuId); 
+    }
 
     l_pFifo->Release();
     l_pFifo = NULL;
@@ -343,6 +359,11 @@ bool CuP7proxy::RegisterCpu(uint8_t       i_bCpuId,
         }
         m_cLock.Unlock();
     }
+    else
+    {
+        uERROR(TM("RegisterCpu %s(%u) command timeout!"), i_pName, (uint32_t)i_bCpuId); 
+    }
+
 
     l_pFifo->Release();
     l_pFifo = NULL;
@@ -367,6 +388,10 @@ bool CuP7proxy::UnRegisterCpu(uint8_t i_bCpuId)
         m_cLock.Lock();
         l_bReturn = l_cCmd.bResult;
         m_cLock.Unlock();
+    }
+    else
+    {
+        uERROR(TM("UnRegisterCpu %u command timeout!"), (uint32_t)i_bCpuId); 
     }
 
 
@@ -435,6 +460,7 @@ void CuP7proxy::ReleaseChannel(IP7_Client *i_pClient, uint32_t i_uID)
     CLock l_cLock(&m_cLock);
     if (!i_pClient)
     {
+        uERROR(TM("uP7 proxy can't find client"), 0);
         return;
     }
 
@@ -455,11 +481,6 @@ void CuP7proxy::ReleaseChannel(IP7_Client *i_pClient, uint32_t i_uID)
     else
     {
         uERROR(TM("uP7 proxy can't unregister channel %u"), i_uID);
-    }
-
-    if (!i_pClient)
-    {
-        uERROR(TM("uP7 proxy can't find client"), 0);
     }
 }
 
@@ -526,12 +547,8 @@ void CuP7proxy::ProcRoutine()
                 }
                 else
                 {
-                    uERROR(TM("Reveive empty buffer, panic?"), 0);
+                    uCRITICAL(TM("cpu#%d is not initialized, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
                 }
-            }
-            else
-            {
-                uCRITICAL(TM("Unitialized cpu#%d, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
             }
         }
         else if (    (eProcThreadAddCpu == l_uCmdId)
@@ -578,6 +595,30 @@ void CuP7proxy::ProcRoutine()
                              && (l_pCmd->bCpuId == l_pCpu->GetId())
                            )
                         {
+                            size_t l_szMaxCount = l_pCpu->GetFifo()->GetBuffersCount();
+                            CuP7Fifo::stBuffer *l_pBuffer = nullptr;
+
+                            for (size_t l_szI = 0; l_szI < l_szMaxCount; l_szI++)
+                            {
+                                l_pBuffer = l_cFifoGroup.PullBuffer(l_pCpu->GetId());
+                                if (l_pBuffer)
+                                {
+                                    l_pCpu->Process(l_pBuffer);
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+
+
+                            l_pBuffer = l_pCpu->GetFifo()->PullFirst();
+                            if (l_pBuffer)
+                            {
+                                l_pCpu->Process(l_pBuffer);
+                            }
+
+                            l_cFifoGroup.UnregisterFifo(l_pCpu->GetFifo());
                             l_cCpuList.Del(l_pEl, TRUE);
                             l_pCmd->bResult = true;
                             break;
@@ -622,7 +663,7 @@ void CuP7proxy::ProcRoutine()
                     }
                     else
                     {
-                        uCRITICAL(TM("Unitialized cpu#%d, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
+                        uCRITICAL(TM("cpu#%d is not initialized, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
                     }
                 }
             }

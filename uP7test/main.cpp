@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
@@ -21,7 +20,7 @@ int wmain(int i_iArgC, tXCHAR *i_pArgV[])
 int main(int i_iArgC, tXCHAR *i_pArgV[])
 #endif
 {
-    if (i_iArgC < 2)
+    if (i_iArgC < 2) 
     {
         printf("Error: please provide path to <uP7>/uP7Test/uP7preProcessor\n");
         printf("Example: uP7Test ~/Projects/uP7/uP7Test/uP7preProcessor\n");
@@ -48,7 +47,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -60,7 +59,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -71,7 +70,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -82,7 +81,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -93,7 +92,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
         return -1;
     }
     
@@ -104,10 +103,20 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
     }
     else
     {
-        printf("Failed!\n");
+        printf("ERROR: Failed!\n");
+        return -1;
+    }                            
+
+    printf("Execute t7Pattern ... \n");
+    if (t7Pattern(i_pArgV[1]))
+    {
+        printf("Succeed!\n");
+    }
+    else
+    {
+        printf("ERROR: Failed!\n");
         return -1;
     }
-
 
     return 0;
 }

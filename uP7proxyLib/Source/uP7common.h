@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_COMMON_H
@@ -112,13 +111,13 @@ extern "C"
 #define FIFO_MIN_LENGTH               16384
 #define FIFO_MIN_BUFFERS_COUNT        4
 #define FIFO_MIN_BUFFER_SIZE          4096
-#define FIFO_MAX_BUFFER_SIZE          (128*1024)
+#define FIFO_MAX_BUFFER_SIZE          (256*1024)
 
 
 #define TIME_SYNC_TIMEOUT_MS              1250
 #define uP7_MAINTAIN_TIME_MS              250
 #define uP7_MAINTAIN_TIME_STAT_PERIOS_MS  1000
-#define COMMAND_TIMEOUT_MS                5000
+#define COMMAND_TIMEOUT_MS                30000
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static UNUSED_FUNC uint64_t ntohqw(uint64_t i_qwX)

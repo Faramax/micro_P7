@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <stdio.h>    
@@ -69,7 +68,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         return -1;
     }
 
-    IuP7proxy *l_iProxy = uP7createProxy(TM("/P7.Verb=0 /P7.Sink=Baical /P7.Pool=1024"), i_pArgV[1]);
+    IuP7proxy *l_iProxy = uP7createProxy(TM("/P7.Verb=4 /P7.Sink=Baical /P7.Pool=1024"), i_pArgV[1]);
 
     l_iProxy->RegisterCpu(1, false, CpuTimerFrequency(), TM("CPU simulation example"), 0xFFFF, true, g_pFifo);
 
@@ -94,4 +93,3 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
  
     return 0;
 }
-

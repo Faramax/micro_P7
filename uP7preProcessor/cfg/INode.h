@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef CFG_INODE_H
@@ -85,6 +84,9 @@ namespace Cfg
         /// <param name="o_pValue"> attribute value, output</param>
         /// <returns>Bk::eResult::eOk in case of success</returns>  
         virtual Cfg::eResult  GetAttrInt32(const tXCHAR *i_pName, tINT32 *o_pValue) = 0;
+        virtual Cfg::eResult  GetAttrUint32(const tXCHAR *i_pName, tUINT32 *o_pValue) = 0;
+        virtual Cfg::eResult  GetAttrInt64(const tXCHAR *i_pName, tINT64 *o_pValue) = 0;
+        virtual Cfg::eResult  GetAttrUint64(const tXCHAR *i_pName, tUINT64 *o_pValue) = 0;
 
         /// <summary> Get attribute text value </summary>
         /// <param name="i_pName"> attribute name</param>
@@ -97,6 +99,9 @@ namespace Cfg
         /// <param name="i_lValue"> attribute value </param>
         /// <returns>Bk::eResult::eOk in case of success</returns>  
         virtual Cfg::eResult  SetAttrInt32(const tXCHAR *i_pName, tINT32 i_lValue)= 0;
+        virtual Cfg::eResult  SetAttrUint32(const tXCHAR *i_pName, tUINT32 i_lValue)= 0;
+        virtual Cfg::eResult  SetAttrInt64(const tXCHAR *i_pName, tINT64 i_lValue)= 0;
+        virtual Cfg::eResult  SetAttrUint64(const tXCHAR *i_pName, tUINT64 i_lValue)= 0;
 
         /// <summary> Set attribute text value </summary>
         /// <param name="i_pName"> attribute name </param>

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
@@ -307,6 +306,10 @@ namespace pugi
         // Get attribute value as a number, or 0 if conversion did not succeed or attribute is empty
         int as_int() const;
         unsigned int as_uint() const;
+
+        long long as_int64() const;
+        unsigned long long as_uint64() const;
+
         double as_double() const;
         float as_float() const;
 
@@ -320,6 +323,8 @@ namespace pugi
         // Set attribute value with type conversion (numbers are converted to strings, boolean is converted to "true"/"false")
         bool set_value(int rhs);
         bool set_value(unsigned int rhs);
+        bool set_value64(long long rhs);
+        bool set_value64(unsigned long long rhs);
         bool set_value(double rhs);
         bool set_value(bool rhs);
 

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef PFILESYSTEM_H
@@ -146,6 +145,22 @@ public:
 
         while ((l_pDir_Entry = readdir(l_pDir)) != 0)
         {
+            if (DT_LNK == l_pDir_Entry->d_type)
+            {
+                CWString l_pTmp;
+                l_pTmp.Set(i_pDirectory->Get());
+                l_pTmp.Append(2, L"/", l_pDir_Entry->d_name);
+
+                if (File_Exists(l_pTmp.Get()))
+                {
+                    l_pDir_Entry->d_type = DT_REG;
+                }
+                else if (Directory_Exists(l_pTmp.Get()))
+                {
+                    l_pDir_Entry->d_type = DT_DIR;
+                }
+            }
+
             if (DT_REG == l_pDir_Entry->d_type)
             {
                 if (0 == fnmatch(i_pMask, l_pDir_Entry->d_name, FNM_NOESCAPE | FNM_CASEFOLD))
@@ -176,46 +191,7 @@ public:
 
     }// Enumerate_Files
 
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Enumerate_Dir_Group
-    // Split the directories group separated by ";" and enumerate files in them.
-    static void Enumerate_Dir_Group(CBList<CWString*> *i_pDll_List,
-                                    CWString          *i_pGroup,
-                                    const char        *i_pMask, //for example L"*.so"
-                                    tUINT32            i_dwDepth = 0xFFFFFFul)
-    {
-       if (    (NULL == i_pDll_List)
-            || (NULL == i_pGroup)
-            || (NULL == i_pMask)
-          )
-       {
-           return;
-       }
-
-
-       tXCHAR* l_pGroupRawBegin = i_pGroup->Get();
-       tXCHAR* l_pGroupRawEnd = l_pGroupRawBegin;
-       while(true)
-       {
-           int const ZeroEnd = (0 == *l_pGroupRawEnd);
-           int const SemicolonEnd = (';' == *l_pGroupRawEnd);
-           if(ZeroEnd || SemicolonEnd)
-           {
-               CWString SubStr(l_pGroupRawBegin);
-               *l_pGroupRawEnd = 0;
-
-               Enumerate_Files(i_pDll_List, &SubStr, i_pMask, i_dwDepth);
-
-               if(ZeroEnd)
-                   return;
-
-               l_pGroupRawBegin = l_pGroupRawEnd + 1;
-           }
-           ++l_pGroupRawEnd;
-       }
-    }// Enumerate_Dir_Group
-
+    
     ////////////////////////////////////////////////////////////////////////////
     // Enumerate_Dirs
     static void Enumerate_Dirs(CBList<CWString*> *io_pList, const tXCHAR *i_pRoot)
@@ -225,11 +201,11 @@ public:
             return;
         }
 
-		if (!i_pRoot)
-		{
-		    i_pRoot = "/";
-		}
-		
+        if (!i_pRoot)
+        {
+            i_pRoot = "/";
+        }
+        
         DIR    *l_pDir       = opendir(i_pRoot);
         dirent *l_pDir_Entry = 0;
 
@@ -258,7 +234,7 @@ public:
         closedir(l_pDir);
         l_pDir = 0;
     }// Enumerate_Dirs
-	
+    
     ////////////////////////////////////////////////////////////////////////////
     //Get_File_Size
     static tUINT64 Get_File_Size(const tACHAR *i_pFile)
@@ -348,8 +324,8 @@ public:
         o_pPath->Set(pw->pw_dir);
         return TRUE;
     }
-	
-	
+    
+    
     ////////////////////////////////////////////////////////////////////////////
     //GetUserDirectory
     static tBOOL GetDirectoryParent(CWString &i_rChild, CWString &o_rParent)
@@ -389,7 +365,7 @@ public:
 
         return (*l_pDir) ? TRUE : FALSE;
     }
-	
+    
 };
 
 

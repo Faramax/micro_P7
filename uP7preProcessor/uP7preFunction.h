@@ -1,20 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_FUNCTION_H
 #define UP7_FUNCTION_H
 
-#define UP7_FUNC_MAX_ARGUMENTS_COUNT 6
+#define UP7_FUNC_MAX_ARGUMENTS_COUNT  6
 #define UP7_FUNC_UNDEFINED_INDEX     -1
 
 
@@ -57,7 +56,10 @@ struct stFuncDesc
     {
         eTrace,
         eRegisterModule,
-        eCreateCounter
+        eCreateCounter,
+        eRegisterModules,
+        eCreateCounters,
+        eCount,
     };
 
     char  *pName;
@@ -94,12 +96,12 @@ struct stFuncDesc
 
     void InitDefaultArgs()
     {
-        if (eFtype == eRegisterModule)
+        if ((eFtype == eRegisterModule) || (eFtype == eRegisterModules))
         {
             pArgs[eRegModNameIndex]  = 0;
             pArgs[eRegModLevelIndex] = 1;
         }
-        else if (eFtype == eCreateCounter)
+        else if ((eFtype == eCreateCounter) || (eFtype == eCreateCounters))
         {
             pArgs[eMkCounterNameIndex]     = 0;
             pArgs[eMkCounterMinIndex]      = 1;
@@ -156,6 +158,8 @@ public:
             }
 
             while (    (    (' '  == *pRefStop)
+                         || (')'  == *pRefStop)  
+                         || (','  == *pRefStop)  
                          || ('\t' == *pRefStop)
                          || ('\n' == *pRefStop)
                          || ('\r' == *pRefStop)
@@ -170,6 +174,16 @@ public:
         virtual ~stArg() { if (pNewVal) { free(pNewVal); }}
     };
 
+    struct stPattern
+    {
+        std::string cPrefix;
+        uint32_t uValue;
+        uint32_t uStart;
+        uint32_t uStop;
+
+        void reset() { uValue = 0; uStart = 0; uStop = 0; cPrefix = ""; }
+    };
+
 protected:
     CpreFile      *m_pFile;  
     stFuncDesc    *m_pDesc;
@@ -181,6 +195,7 @@ protected:
 
 public:
     CFuncRoot(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_pStart, const char *i_pStop, int i_iLine, const char *i_pFunctionName);
+    CFuncRoot(CFuncRoot *i_pRoot);
     virtual ~CFuncRoot();
     eErrorCodes       GetError();
     int               GetLine();
@@ -190,9 +205,13 @@ public:
     CBList<stArg*>*   GetArgs() {return &m_cArgs;}
     stFuncDesc::eType GetType() {return m_pDesc->eFtype;}
     CpreFile*         GetFile() {return m_pFile;}
-    virtual void     *GetBuffer(size_t &o_rSize) = 0;
+    virtual void     *GetBuffer(size_t &o_rSize) { o_rSize = 0; return nullptr;}
 
-    static char*      FindFunctionEnd(char *i_pStart, size_t i_szNameLen, int &o_rLines);
+    static char      *FindFunctionEnd(char *i_pStart, size_t i_szNameLen, int &o_rLines);
+
+    bool              GetPatterns(size_t i_szArgIdx, std::vector<stPattern> &o_rPattern);
+
+    void              SetFuncDesc(stFuncDesc *i_pDesc);
 
 protected:
     char    *GetParameterStrValue(const stArg *i_pArg);
@@ -249,6 +268,7 @@ protected:
 
 public:
     CFuncModule(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_pStart, const char *i_pStop, int i_iLine, const char *i_pName);
+    CFuncModule(CFuncRoot *i_pRoot, const char *i_pName);
     virtual ~CFuncModule();
     void        SetId(tUINT16 i_wId);
     tUINT16     GetId() {return m_wId;}
@@ -256,6 +276,9 @@ public:
     const char *GetName() { return m_pName;}
     const char *GetVerbosity() { return m_pVerbosity;}
     tUINT32     GetHash() { return m_uHash;}
+private:
+    void initialize();
+
 };
 
 
@@ -276,6 +299,7 @@ protected:
 
 public:
     CFuncCounter(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_pStart, const char *i_pStop, int i_iLine, const char *i_pName);
+    CFuncCounter(CFuncRoot *i_pRoot, const char *i_pName);
     virtual ~CFuncCounter();
     void        SetId(tUINT16 i_wId);
     tUINT16     GetId()      { return m_wId;}
@@ -292,6 +316,9 @@ public:
                && (i_pRef->m_dbMaxAlarm == m_dbMaxAlarm);
     
     }
+
+private:
+    void initialize();
 };
 
 

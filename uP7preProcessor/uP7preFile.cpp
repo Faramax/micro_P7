@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -59,26 +58,65 @@ CpreFile::CpreFile(CpreManager *i_pManager, const tXCHAR *i_pName, eErrorCodes &
                     )
         )
     {
-        tUINT64 l_qwFileSize = l_cFile.Get_Size();
+        tUINT64 l_qwFileSize   = l_cFile.Get_Size();
          
         if (l_qwFileSize < MAX_FILE_SIZE)
         {
             m_szData = (size_t)l_qwFileSize;
-            m_pData  = (tUINT8*)malloc((size_t)m_szData + 1);
-            if ((size_t)m_szData == l_cFile.Read(m_pData, (size_t)m_szData))
+            m_pData  = (tUINT8*)malloc(m_szData + 1);
+
+            if (m_pData)
             {
-                m_pData[(size_t)m_szData] = 0;
+                if (m_szData == l_cFile.Read(m_pData, m_szData))
+                {
+                    m_pData[m_szData] = 0;
 
-                CKeccak l_cHash;
-                l_cHash.UpdateB(m_pData, (size_t)m_szData);
-                l_cHash.Get_HashB(m_pHash, sizeof(m_pHash));
+                    uint8_t *l_pNormalized = (uint8_t*)malloc(m_szData + 1);
 
-                Parse();
+                    if (l_pNormalized)
+                    {
+                        tUINT8 *l_pItSrc = m_pData;
+                        tUINT8 *l_pItDst = l_pNormalized;
+                        while (*l_pItSrc)
+                        {
+                            if ('\r' == *l_pItSrc)
+                            {
+                                ++l_pItSrc;
+                            }
+                            else
+                            {
+                                *l_pItDst = *l_pItSrc;
+
+                                l_pItDst ++;
+                                l_pItSrc++;
+                            }
+                        }
+
+                        CKeccak l_cHash;
+                        l_cHash.UpdateB(l_pNormalized, l_pItDst - l_pNormalized);
+                        l_cHash.Get_HashB(m_pHash, sizeof(m_pHash));
+
+                        free(l_pNormalized);
+
+                        Parse();
+
+                    }
+                    else
+                    {
+                        OSPRINT(TM("ERROR: Can't allocate memory {%s}\n"), i_pName);
+                        m_eError = eErrorFileRead;
+                    }
+                }
+                else
+                {
+                    OSPRINT(TM("ERROR: Can't read file {%s}\n"), i_pName);
+                    m_eError = eErrorFileRead;
+                }
             }
             else
             {
-                OSPRINT(TM("ERROR: Can't read file {%s}\n"), i_pName);
-                m_eError = eErrorFileRead;
+                OSPRINT(TM("ERROR: Can't allocate memory for file {%s}\n"), i_pName);
+                m_eError = eErrorMemAlloc;
             }
         }
         else
@@ -492,7 +530,7 @@ tBOOL CpreFile::Parse()
 
     while (*l_pIt)
     {
-        if (0xA == *l_pIt)
+        if (0xA == *l_pIt)  // \n
         {
             if (eComment::eLine == l_eComment)
             {
@@ -555,7 +593,7 @@ tBOOL CpreFile::Parse()
                     if (l_pBlock)
                     {
                         l_pBlock->iBrakets --;
-                        if (!l_pBlock->iBrakets)
+                        if (0 >= l_pBlock->iBrakets)
                         {
                             m_cBlocks.Del(l_pEl, TRUE);
                         }
@@ -573,7 +611,10 @@ tBOOL CpreFile::Parse()
                 {
                     size_t      l_szLen     = 0;
                     const char *l_pFuncName = GetFunctionName((const char*)m_pData, l_pIt, l_szLen);
-                    m_cBlocks.Push_Last(new stBlock(TRUE, l_pFuncName, l_szLen));
+                    if (l_pFuncName)
+                    {
+                        m_cBlocks.Push_Last(new stBlock(TRUE, l_pFuncName, l_szLen));
+                    }
                 }
             }
             else if (';' == *l_pIt) //probably end of the function declaration
@@ -626,6 +667,118 @@ tBOOL CpreFile::Parse()
                             else if (stFuncDesc::eCreateCounter == l_pFunc->eFtype)
                             {
                                 m_cFunctions.Push_Last(new CFuncCounter(this, l_pFunc, l_pStart, l_pIt, l_iCurLine, l_pFuncionName));
+                            }
+                            else if (    (stFuncDesc::eRegisterModules == l_pFunc->eFtype)
+                                      || (stFuncDesc::eCreateCounters == l_pFunc->eFtype)
+                                    )
+                            {
+                                //scanning for uniform parameters, creating base function descriptor
+                                std::unique_ptr<CFuncRoot> l_cRoot(new CFuncRoot(this, 
+                                                                                 l_pFunc, 
+                                                                                 l_pStart, 
+                                                                                 l_pIt, 
+                                                                                 l_iCurLine, 
+                                                                                 l_pFuncionName));
+
+                                std::vector<CFuncRoot::stPattern> l_cPatterns;
+                                size_t l_szMaxLen = 0;
+                                //retrieve pattern from first argument
+                                if (l_cRoot->GetPatterns((size_t)eRegModNameIndex, l_cPatterns))
+                                {
+                                    //checking scanned pattern for errors
+                                    uint64_t l_qwCombinations = 1;
+                                    for (auto& l_rIt : l_cPatterns)
+                                    {
+                                        l_rIt.uValue = l_rIt.uStart;
+                                        if (l_rIt.uStart >= l_rIt.uStop)
+                                        {
+                                            m_eError = eErrorFunctionArgs;
+                                            OSPRINT(TM("ERROR: file {%s}:%d Pattern start >= stop\n"), m_pOsPath, l_iCurLine);
+                                        }
+
+                                        l_qwCombinations *= (uint64_t)(l_rIt.uStop - l_rIt.uStart + 1);
+
+                                        if (l_rIt.cPrefix.size() > l_szMaxLen) 
+                                        {
+                                            l_szMaxLen = l_rIt.cPrefix.size(); 
+                                        }
+                                    }
+
+                                    //if (l_qwCombinations > 4096)
+                                    //{
+                                    //    m_eError = eErrorFunctionArgs;
+                                    //    OSPRINT(TM("ERROR: file {%s}:%d Pattern generates more than 4096 combinations\n"), m_pOsPath, l_iCurLine);
+                                    //}
+
+
+                                    //allocate temp buffer for sprintf + few more bytes to store digits
+                                    l_szMaxLen += 64;
+                                    std::unique_ptr<char> l_cBuffer(new char[l_szMaxLen]);
+                                    
+                                    while (eErrorNo == m_eError)
+                                    {
+                                        //generating name for new counter or module
+                                        std::string l_cName;
+                                        for (auto& l_rIt : l_cPatterns)
+                                        {
+                                            sprintf(l_cBuffer.get(), l_rIt.cPrefix.c_str(), l_rIt.uValue);
+                                            l_cName += l_cBuffer.get();
+                                        }
+
+                                        //creating final function
+                                        if (stFuncDesc::eRegisterModules == l_pFunc->eFtype)
+                                        {
+                                            l_cRoot->SetFuncDesc(m_pManager->GetFuncDesc(stFuncDesc::eRegisterModule));
+                                            m_cFunctions.Push_Last(new CFuncModule(l_cRoot.get(), l_cName.c_str()));
+                                        }
+                                        else //(stFuncDesc::eCreateCounters == l_pFunc->eFtype)
+                                        {
+                                            l_cRoot->SetFuncDesc(m_pManager->GetFuncDesc(stFuncDesc::eCreateCounter));
+                                            m_cFunctions.Push_Last(new CFuncCounter(l_cRoot.get(), l_cName.c_str()));
+                                        }
+
+
+                                        //iterate over pattern
+                                        bool l_bEnd = false;
+                                        CFuncRoot::stPattern &l_pLast = l_cPatterns.back();
+                                        l_pLast.uValue ++;
+
+                                        size_t l_szI = l_cPatterns.size();
+
+                                        while (l_szI > 0)
+                                        {
+                                            l_szI--;
+
+                                            if (l_cPatterns[l_szI].uValue > l_cPatterns[l_szI].uStop)
+                                            {
+                                                l_cPatterns[l_szI].uValue = l_cPatterns[l_szI].uStart;
+                                                if (l_szI > 0)
+                                                {
+                                                    l_cPatterns[l_szI-1].uValue++;
+                                                }
+                                                else
+                                                {
+                                                    l_bEnd = true;
+                                                    break;
+                                                }
+                                            }
+                                            else
+                                            {
+                                                break;
+                                            }
+                                        }
+
+                                        if (l_bEnd) 
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    m_eError = eErrorFunctionArgs;
+                                    OSPRINT(TM("ERROR: file {%s}:%d Pattern parsing error!\n"), m_pOsPath, l_iCurLine);
+                                }
                             }
                             else
                             {
@@ -751,6 +904,12 @@ const char* CpreFile::GetFunctionName(const char* i_pHead, const char *i_pCurPos
         i_pCurPos --;
         o_rLength ++;
     }
+
+    if (!o_rLength)
+    {
+        return nullptr;
+    }
+
 
     if (i_pHead != i_pCurPos)
     {

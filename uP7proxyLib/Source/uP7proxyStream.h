@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_PROXY_STREAM_H
@@ -91,11 +90,12 @@ protected:
     bool                   m_bClosed;
 
 
+    uint64_t               m_qwCpuTimeDriftCalibration;
     uint64_t               m_qwCpuProxyCreationTime;
     uint64_t               m_qwCpuStartTime;
     uint64_t               m_qwCpuFreq;
 
-    uint64_t               m_qwHostProxyCreationTime;
+    uint64_t               m_qwHostTimeDriftCalibration;
     uint64_t               m_qwHostFreq;
 
     int64_t                m_llTimeCorrection;
@@ -131,14 +131,11 @@ public:
     {
         double   l_dbCpuTimeDiff  = (double)m_qwCpuProxyCreationTime - (double)m_qwCpuStartTime;
         double   l_dbAbsTimeDiff  = l_dbCpuTimeDiff * (double)TIME_SEC_100NS / (double)m_qwCpuFreq;
-        double   l_dbHostTimeDiff = l_dbCpuTimeDiff * (double)m_qwHostFreq / (double)m_qwCpuFreq;
         uint64_t l_qwChannelTime  = (((uint64_t)o_pP7hdr->dwTime_Hi) << 32) + (uint64_t)o_pP7hdr->dwTime_Lo;
 
         l_qwChannelTime     = (uint64_t)((int64_t)l_qwChannelTime - (int64_t)l_dbAbsTimeDiff);
         o_pP7hdr->dwTime_Hi = (uint32_t)((l_qwChannelTime >> 32) & 0xFFFFFFFFull);
         o_pP7hdr->dwTime_Lo = (uint32_t)(l_qwChannelTime & 0xFFFFFFFFull);
-
-        m_qwHostProxyCreationTime = (uint64_t)((int64_t)m_qwHostProxyCreationTime - (int64_t)l_dbHostTimeDiff);
 
         m_eState = eStateReady;
     }

@@ -1,21 +1,22 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_PROXY_CPU_H
 #define UP7_PROXY_CPU_H
 
 
-#define uP7_CPU_STREAMS_COUNT 2
+#define uP7_CPU_STREAMS_COUNT   2
+#define uP7_CPU_STREAMS_MAX     ((1 << uP7_CPU_STREAMS_COUNT) - 1)
+#define uP7_CPU_MAX_PACKET_SIZE 4096
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CProxyCpu
@@ -50,7 +51,7 @@ class CProxyCpu
 protected:
     CWString                m_cName;
     stStream                m_cStreams[uP7_CPU_STREAMS_COUNT];
-    eState                  m_cObjState;
+    eState                  m_eObjState;
     bool                    m_bError;
     bool                    m_bConvertEndianess;
     IP7_Trace              *m_pP7Trace;
@@ -95,9 +96,10 @@ public:
     virtual ~CProxyCpu();
     bool     Process(CuP7Fifo::stBuffer *i_pBuffer);
     bool     Maintain();
-    uint8_t  GetId() {return m_bId;}
+    uint8_t  GetId()   {return m_bId;}
+    CuP7Fifo*GetFifo() {return m_iFifo;}
 protected:
-    bool                      SyncronizeSession(const uint8_t *i_pData, size_t i_szData);
+    bool                      SynchronizeSession(const uint8_t *i_pData, size_t i_szData);
     const stPreProcessorFile *FindDescription(uint32_t i_uSessionId);
     void                      AddBlockPackets();
     void                      AddPacket(stStream &i_rStream, stuP7baseHdr *i_pHdr);

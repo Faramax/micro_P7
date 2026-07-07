@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="UTF-16"?>
+﻿<?xml version="1.0" encoding="utf-16"?>
 <uP7preProcessor>
     <Options>
         <!-- 
@@ -11,8 +11,22 @@
             - IDsHeader: boolean flag (true/false)
               * true - generate additional header whith telemetry & module IDs
               * false - skip IDs header generation
+            - Verbose - boolean flag to provide more output during preprocessing, default = false  
+            - ConsecutiveId - boolean flag to select ID generation algo:
+              * true - parser will generate IDs in single continous line without "holes". This is optimum
+                       mode for uP7 performance, Trace will work with complexity of O(1). But such mode may 
+                       significantly change ID redistribution and will require commits of the files which were 
+                       not modified
+              * false - parser will generate IDs with idea to limit amount of changes in source files.
+                            It will significanlty reduce amount changes but will affect in uP7 performance speed
+                            Each call of uP7TrcSent will take O(log(n))
+                            **Default one**
+            - TestMode: boolean flag(true/false) used only for test purposes only and only when 
+              uP7proxy and uP7 are working on the same local system. If flag is "true" - preprocessor
+              will ignor values of "Bits" & "wchar_t" arguments and will use auto-detected values
+              N.B.: Please do not use this flag on production. This flag is only for test & demo purposes!
         -->
-        <Project Name="uP7test" Bits="x64" wchar_t="16" IDsHeader="true" />
+        <Project Name="uP7test" Bits="x32" wchar_t="32" IDsHeader="true" ConsecutiveId="true" Verbose="true" TestMode="true" />
         <Process>
             <Pattern Mask="*.cpp" />
             <Pattern Mask="*.h" />
@@ -66,19 +80,21 @@
             <!--<File RelativePath="folder1/folder2/myfile.cpp" />-->
         </ExcludedFiles>
     </Options>
-    <Files>
-        <File RelativePath="/t1CreateDestroy.cpp" Hash="267B32FA662DB723688FD8B044E9ED6BB935702A98B5A38E6354B85BEA1A6F08" />
-        <File RelativePath="/t1CreateDestroy.h" Hash="B9053FC442CC8FB5A140F665B5B8652D584E9F60D2C368E02EB960F7679EFA7C" />
-        <File RelativePath="/t2Format.cpp" Hash="7004ABA9AF9BE50299A48C441A7237A63855D15F20B96E363ED0111DDA8650DD" />
-        <File RelativePath="/t2Format.h" Hash="78EF9344C6249666D781A66DFDA7BA88AC5D904044C74030314381EF04CE9456" />
-        <File RelativePath="/t3Performance.cpp" Hash="E025B4991F7C8394E8262E71FBFC0CAF0452F01EF985A04CB74A31448AA36F1C" />
-        <File RelativePath="/t3Performance.h" Hash="3182EBF40AC65D54709ADC747C51730CFD088979A5F29947461256FC44E3EE36" />
-        <File RelativePath="/t4MultiCore.cpp" Hash="02EF488263DD50E82F9294F03D5F6C01887468B1607FEE4EB645D3D813552C2C" />
-        <File RelativePath="/t4MultiCore.h" Hash="B32C6BDF82C7325803D9124DD893D49C04E34A8C3F0973AAE216A0232939DA54" />
-        <File RelativePath="/t5Time.cpp" Hash="55B81EA8507564C00342445E0461501E7D718FC15A3F68B2454EEC5136458D67" />
-        <File RelativePath="/t5Time.h" Hash="B097F32DE3D91393954261A43A05B9183346325101DE197C3E6549B97E857AC5" />
-        <File RelativePath="/t6Resync.cpp" Hash="BA81ADF43D10BDF078ADD9DF569E44365D90F5CF363EBEA9F387027DFE290985" />
-        <File RelativePath="/t6Resync.h" Hash="34C54618E17C5D4D3F7C50B63CA15D341F7C75C7758EDAB780DC695F5FA461EC" />
-        <File RelativePath="/uP7preProcessor/uP7IDs.h" Hash="4FC2BF240FE4628255D3601428201CF564A54FC2E540B593CAA9D4820D3393E5" />
+    <Files Crc7="8" SessionId="2594892637" Time="133720159864360930" SfHash="76DBC7282F7860CAE2CF2B1CE3D93592BE05C5BEDF48C76375726A55AF50F49E">
+        <File RelativePath="/t1CreateDestroy.cpp" Hash="93353BAFE2E8AEC4FD01042878FC7C3B98BDEA7AE3EAA4C6456CDC292027F81A" />
+        <File RelativePath="/t1CreateDestroy.h" Hash="7EEB23B68B1FCDE065794F2DA327A5AC9D8F0DB8E9F73954E02C854CD6AF0B69" />
+        <File RelativePath="/t2Format.cpp" Hash="291A24EFAC65EFA06B9305A2CF918445B45E86F8321EB54480CE4064170E18AC" />
+        <File RelativePath="/t2Format.h" Hash="887B794096280A1A49BECABEE0B2C8167CC17EF4EC8C02A47DAC59A1E48E14D6" />
+        <File RelativePath="/t3Performance.cpp" Hash="AFACA1E1FB57A7219046B3F122EBB22B1A6C0FB9C9AF00611649E9611A04758B" />
+        <File RelativePath="/t3Performance.h" Hash="5EA9E734B49F79BBFD5A1D0B50C29246E2958DE6C4644245D292A2464D97D4E8" />
+        <File RelativePath="/t4MultiCore.cpp" Hash="7104A6CFAFEA93542AA2C8FDBF77EE5B0EEF19CA048581B97534A8AB7DCC84D7" />
+        <File RelativePath="/t4MultiCore.h" Hash="A45941C6A635830F2102F67904C1C30076741C1A6E5C88EA0F6111C73079BE74" />
+        <File RelativePath="/t5Time.cpp" Hash="D9CB4461B58010F6CB5333E59EC8D5F3D9F0860DF1C4B4689C0835674C85E092" />
+        <File RelativePath="/t5Time.h" Hash="A4E6743B53EB8CA4AD2DC27D63896E90316D2C9A1CEA69198B4D93781EF11EFB" />
+        <File RelativePath="/t6Resync.cpp" Hash="3C7C7D01C1C540DD6EE2E4518BC3D9A446A9A5549893BDEAAE0131B1AD6F23EA" />
+        <File RelativePath="/t6Resync.h" Hash="DAF8560AA70BC2CCA8A907E4CAB19BA2BCDAF42CAD4FF91E4955EAA19E2C18EE" />
+        <File RelativePath="/t7Pattern.cpp" Hash="6BFF8682AAFF71395DD2FEA8B7ED2DFAE23750883178AEB2E3F5C2E834D5E4E3" />
+        <File RelativePath="/t7Pattern.h" Hash="EF42BF292B450C55FD75BA24143849E3C87DB553C7A1D124D30D5E67BB1DDF8F" />
+        <File RelativePath="/uP7preProcessor/uP7IDs.h" Hash="8F6DDCDD0DC821DA622D39E7AC2146328E016C18314C691A852DE76990270F44" />
     </Files>
 </uP7preProcessor>

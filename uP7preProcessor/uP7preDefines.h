@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_PRE_DEFINES_H
@@ -29,6 +28,8 @@ enum eErrorCodes
     eErrorTraceFormat            ,
     eErrorMemAlloc               ,
     eErrorTraceIdOverFlow        ,
+    eErrorModuleIdOverFlow       ,
+    eErrorTelIdOverFlow          ,
     eErrorTraceIdDuplicate       ,
     eErrorFileWrite              ,
     eErrorNameDuplicated         ,
@@ -80,24 +81,28 @@ enum eErrorCodes
 
 #if !defined(INTMAX_MAX)
     typedef int64_t intmax_t;
-     #define INTMAX_MIN		(-0x7fffffffffffffff - 1)
-     #define INTMAX_MAX		0x7fffffffffffffff
+    #define INTMAX_MIN		(-0x7fffffffffffffff - 1)
+    #define INTMAX_MAX		0x7fffffffffffffff
 #endif
 
 #ifndef GET_MAX
-    #define GET_MAX(a,b)            (((a) > (b)) ? (a) : (b))
+    #define GET_MAX(a,b)                      (((a) > (b)) ? (a) : (b))
 #endif
 
 #ifndef GET_MIN
-    #define GET_MIN(X,Y)            ((X) < (Y) ? (X) : (Y))
+    #define GET_MIN(X,Y)                      ((X) < (Y) ? (X) : (Y))
 #endif
+                                             
+#define P7TRACE_ITEM_BLOCK_ASTRING            (-1)
+#define P7TRACE_ITEM_BLOCK_USTRING16          (-2)
+#define P7TRACE_ITEM_BLOCK_USTRING8           (-3)
+#define P7TRACE_ITEM_BLOCK_USTRING32          (-4)
+#define P7TRACE_ITEM_BLOCK_ASTRING_FIX        (-5)
+#define P7TRACE_ITEM_BLOCK_WSTRING_FIX        (-6)
 
-#define P7TRACE_ITEM_BLOCK_ASTRING                                          (-1)
-#define P7TRACE_ITEM_BLOCK_USTRING16                                        (-2)
-#define P7TRACE_ITEM_BLOCK_USTRING8                                         (-3)
-#define P7TRACE_ITEM_BLOCK_USTRING32                                        (-4)
-#define P7TRACE_ITEM_BLOCK_ASTRING_FIX                                      (-5)
-#define P7TRACE_ITEM_BLOCK_WSTRING_FIX                                      (-6)
+#define CFG_FILE_INDEX                        1
+#define DIR_SRC_INDEX                         2
+#define DIR_OUT_INDEX                         (i_iArgC - 1)
 
 
 #define XML_NODE_MAIN                         TM("uP7preProcessor")
@@ -106,7 +111,10 @@ enum eErrorCodes
 #define XML_ATTE_OPTIONS_PROJECT_NAME                TM("Name")
 #define XML_ATTE_OPTIONS_PROJECT_BITS                TM("Bits")
 #define XML_ATTE_OPTIONS_PROJECT_WCHAR               TM("wchar_t")
+#define XML_ATTE_OPTIONS_PROJECT_TEST_MODE           TM("TestMode")
 #define XML_ATTE_OPTIONS_PROJECT_IDS                 TM("IDsHeader")
+#define XML_ATTE_OPTIONS_PROJECT_CONSECUTIVE_ID      TM("ConsecutiveId")
+#define XML_ATTE_OPTIONS_PROJECT_VERBOSE             TM("Verbose")
 
 #define XML_NODE_OPTIONS_PROCESS                  TM("Process")
 #define XML_NODE_OPTIONS_PROCESS_PATTERN            TM("Pattern")
@@ -138,9 +146,11 @@ enum eErrorCodes
 #define XML_NARG_OPTIONS_FUNC_TRACE_ID              TM("IdIndex")
 #define XML_NARG_OPTIONS_FUNC_TRACE_FORMAT          TM("FormatStrIndex")
 #define XML_NODE_OPTIONS_FUNC_REGMOD              TM("RegisterModule")
+#define XML_NODE_OPTIONS_FUNC_REGMODS             TM("RegisterModules")
 #define XML_NARG_OPTIONS_FUNC_REGMOD_NAME           TM("NameIndex")
 #define XML_NARG_OPTIONS_FUNC_REGMOD_LEVEL          TM("LevelIndex")
 #define XML_NODE_OPTIONS_FUNC_MKCOUNTER           TM("CreateCounter")
+#define XML_NODE_OPTIONS_FUNC_MKCOUNTERS          TM("CreateCounters")
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_NAME        TM("NameIndex")
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_MIN         TM("MinIndex")
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_AMIN        TM("AlarmMinIndex")
@@ -149,13 +159,16 @@ enum eErrorCodes
 #define XML_NARG_OPTIONS_FUNC_MKCOUNTER_ON          TM("OnIndex")
 
 #define XML_NODE_FILES                          TM("Files")
+#define XML_NARG_OPTIONS_FILES_CRC7               TM("Crc7")
+#define XML_NARG_OPTIONS_FILES_SESSION_ID         TM("SessionId")
+#define XML_NARG_OPTIONS_FILES_TIME               TM("Time")
+#define XML_NARG_OPTIONS_FILES_IDS_H_HASH         TM("IdsHash")
+#define XML_NARG_OPTIONS_FILES_PRE_H_HASH         TM("PreHash")
+#define XML_NARG_OPTIONS_FILES_SFILE_HASH         TM("SfHash")
+
 #define XML_NODE_FILES_ITEM                       TM("File")
 #define XML_NARG_FILES_ITEM_RELATIVE_PATH           TM("RelativePath")
 #define XML_NARG_FILES_ITEM_HASH                    TM("Hash")
                                                
-#define CFG_FILE_INDEX                           1
-#define DIR_SRC_INDEX                            2
-#define DIR_OUT_INDEX                            3
-
 
 #endif //UP7_PRE_DEFINES_H

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_PRE_TOOLS_H
@@ -79,7 +78,6 @@ static UNUSED_FUNC void ntohstr(tWCHAR *l_pBegin)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 static UNUSED_FUNC tXCHAR *NormalizePath(const tXCHAR *io_pPath)
 {
-
     if (!io_pPath)
     {
         return NULL;
@@ -97,7 +95,6 @@ static UNUSED_FUNC tXCHAR *NormalizePath(const tXCHAR *io_pPath)
 
     while (*l_pSrc)
     {
-
         if (    (TM('/') == *l_pSrc)
              || (TM('\\') == *l_pSrc)
            )

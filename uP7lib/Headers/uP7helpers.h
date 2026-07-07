@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7HELPERS_H
@@ -25,6 +24,10 @@
     #define ST_ATTR_PACK(x)
 #endif
 
+#define CONCATENATE_DETAIL(x, y) x##y
+#define CONCATENATE(x, y) CONCATENATE_DETAIL(x, y)
+#define MAKE_UNIQUE(x) CONCATENATE(x, __COUNTER__)
+
 #if !defined(TRUE)
     #define TRUE              1
     #define FALSE             0
@@ -34,8 +37,10 @@
     #define UNUSED_ARG(x)     (void)(x)
 #endif
 
+
 #if !defined(ST_ASSERT)
-    #define ST_ASSERT(cond)   typedef int assert_type[(cond) ? 1 : -1]
+    #define ST_ASSERT(cond)   typedef int MAKE_UNIQUE(assert_type) [(cond) ? 1 : -1]
 #endif
+
 
 #endif //UP7HELPERS_H

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7.h"
@@ -463,6 +462,16 @@ bool uP7TrcRegisterModule(const char *i_pName, enum euP7Level i_eVerbosity, huP7
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void uP7TrcRegisterModules(const char *i_pPattern, enum euP7Level i_eVerbosity)
+{
+    UNUSED_ARG(i_pPattern);
+    UNUSED_ARG(i_eVerbosity);
+    //FUNCTION HAS NO BODY: existing only for pre-processor purpose
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool uP7TrcFindModule(const char *i_pName, huP7Module *o_hModule)
 {
     if (    (!g_puP7.bInitialized)
@@ -832,6 +841,25 @@ bool uP7TelCreateCounter(const char *i_pName,
 
     return false;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void uP7TelCreateCounters(const char* i_pPattern,
+                          tuP7TelVal  i_tMin,
+                          tuP7TelVal  i_tbAlarmMin,
+                          tuP7TelVal  i_tMax,
+                          tuP7TelVal  i_tAlarmMax,
+                          bool        i_bOn)
+{
+    UNUSED_ARG(i_pPattern);
+    UNUSED_ARG(i_tMin);
+    UNUSED_ARG(i_tbAlarmMin);
+    UNUSED_ARG(i_tMax);
+    UNUSED_ARG(i_tAlarmMax);
+    UNUSED_ARG(i_bOn);
+    //FUNCTION HAS NO BODY: existing only for pre-processor purpose
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool uP7TelSentSample(huP7TelId i_hID, tuP7TelVal i_tValue)

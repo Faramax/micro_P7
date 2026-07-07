@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_FIFO_H
@@ -68,6 +67,7 @@ protected:
     size_t                 m_szCpu2HostBuffer;
     size_t                 m_szCpu2Host;
     size_t                 m_szCpu2HostFree;
+    size_t                 m_szCpu2HostBuffersCount;
 
 public:
     CuP7Fifo(uint8_t i_bCpuId, size_t i_szFifoSize, bool i_bFifoBiDirectional, IP7_Trace *i_pP7Trace);
@@ -90,7 +90,7 @@ public:
     CuP7Fifo::stBuffer *PullFirst();
 
     inline uint8_t GetId() const { return m_bCpuId;}
-    
+    inline size_t GetBuffersCount() const { return m_szCpu2HostBuffersCount; }
 };
 
 
@@ -127,6 +127,7 @@ public:
     bool RegisterFifo(CuP7Fifo *i_pFifo);
     bool UnregisterFifo(CuP7Fifo *i_pFifo);
     CuP7Fifo::stBuffer *PullBuffer();
+    CuP7Fifo::stBuffer *PullBuffer(uint8_t i_bCpuId);
 
     inline CFifoList *GetFifos() { return &m_cFifos; }
 

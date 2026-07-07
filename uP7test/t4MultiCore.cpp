@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
@@ -156,7 +155,7 @@ bool t4MultiCore(uint8_t i_bCount, const tXCHAR *i_pSessionFolder)
     uint64_t  l_qwAdd = (uint64_t)(&l_cP7Sink);
     tXCHAR    l_pArgs[4096];
 
-    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=0 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Eto=0 /P7.Pool=16384"), l_qwAdd);
+    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=5 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Eto=0 /P7.Pool=16384"), l_qwAdd);
 
     IuP7proxy *l_iProxy = uP7createProxy(l_pArgs, i_pSessionFolder);
 
@@ -223,7 +222,7 @@ bool t4MultiCore(uint8_t i_bCount, const tXCHAR *i_pSessionFolder)
             for (int l_iI = 0; l_iI < l_iTraces; l_iI++)
             {
                 uP7ProcessIncomingData(&l_stReadCtx, 0);
-                uP7TRC(47, l_hModule1, "Iter %d", l_iI);
+                uP7TRC(48, l_hModule1, "Iter %d", l_iI);
                 std::this_thread::sleep_for(std::chrono::milliseconds(1));
             }
         });

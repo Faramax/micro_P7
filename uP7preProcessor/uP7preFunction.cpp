@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
@@ -20,7 +19,7 @@ CFuncRoot::CFuncRoot(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_pStar
     : m_pFile(i_pFile)
     , m_pDesc(i_pDesc)
     , m_iLine(i_iLine)
-    , m_pFunction(OSSTRDUP(i_pFunctionName))
+    , m_pFunction(OSSTRDUP(i_pFunctionName ? i_pFunctionName : "Unknown"))
     , m_eError(eErrorNo)
     , m_bUpdated(false)
 {
@@ -127,6 +126,26 @@ CFuncRoot::CFuncRoot(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_pStar
         i_pStart++;
     }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CFuncRoot::CFuncRoot(CFuncRoot* i_pRoot)
+    : m_pFile(i_pRoot->m_pFile)
+    , m_pDesc(i_pRoot->m_pDesc)
+    , m_iLine(i_pRoot->m_iLine)
+    , m_pFunction(OSSTRDUP(i_pRoot->m_pFunction))
+    , m_eError(i_pRoot->m_eError)
+    , m_bUpdated(false)
+{
+    pAList_Cell l_pFileEl = NULL;
+
+    while ((l_pFileEl = i_pRoot->m_cArgs.Get_Next(l_pFileEl)))
+    {
+        stArg *l_pArg = i_pRoot->m_cArgs.Get_Data(l_pFileEl);
+        m_cArgs.Push_Last(new stArg(l_pArg->pRefStart, l_pArg->pRefStop));
+    }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CFuncRoot::~CFuncRoot()
@@ -258,6 +277,127 @@ char* CFuncRoot::FindFunctionEnd(char *i_pStart, size_t i_szNameLen, int &o_rLin
     }
 
     return i_pStart;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool CFuncRoot::GetPatterns(size_t i_szArgIdx, std::vector<stPattern>& o_rPattern)
+{
+    if (    (i_szArgIdx >= UP7_FUNC_MAX_ARGUMENTS_COUNT)
+         || (UP7_FUNC_UNDEFINED_INDEX == m_pDesc->pArgs[i_szArgIdx])
+         || (m_pDesc->pArgs[i_szArgIdx] >= (int)m_cArgs.Count())
+       )
+    {
+        OSPRINT(TM("ERROR: Index %zu out of range\n"), i_szArgIdx);
+        return false;
+    }
+
+    char *l_pPattern = GetParameterStrValue(m_cArgs[m_pDesc->pArgs[i_szArgIdx]]);
+    if (!l_pPattern)
+    {
+        printf("ERROR: memory allocation at %s\n", __FUNCTION__);
+        return false;
+    }
+
+    char     *l_pIt      = l_pPattern;
+    char     *l_pStart   = l_pPattern;
+    stPattern l_stPattern;
+    while (*l_pIt)
+    {
+        //searching % start code
+        if ('%' != *l_pIt)
+        {
+            l_pIt++;
+            continue;
+        }
+
+        l_stPattern.reset();
+
+        if (0 == (*(++l_pIt))) { break; }
+
+        //check for prefix like %02u
+        if ('0' == (*l_pIt))
+        {
+            if (0 == (*(++l_pIt))) { break; }
+
+            if (('0' <= *l_pIt) &&  (*l_pIt <= '9'))
+            {
+                if (0 == (*(++l_pIt))) { break; }
+            }
+        }
+
+        //checking for [
+        if ('[' != *l_pIt)
+        {
+            l_pIt++;
+            continue;
+        }
+
+        l_stPattern.cPrefix = std::move(std::string(l_pStart, l_pIt-l_pStart));
+        l_stPattern.cPrefix += "u";
+
+        if (0 == (*(++l_pIt))) { break; }
+
+        if (1 != sscanf(l_pIt, "%u", &l_stPattern.uStart))
+        {
+            l_pIt++;
+            continue;
+        }
+
+        //skipping all decimal digits
+        while ((*l_pIt) && (('0' <= *l_pIt) &&  (*l_pIt <= '9')))
+        {
+            l_pIt++;
+        }
+
+        //checking for ..
+        if (0 == (*l_pIt))     { break; }
+        if ('.' != (*l_pIt))   { l_pIt++; continue;}
+        if (0 == (*(++l_pIt))) { break; }
+        if ('.' != (*l_pIt))   { l_pIt++; continue;}
+        if (0 == (*(++l_pIt))) { break; }
+
+        if (1 != sscanf(l_pIt, "%u", &l_stPattern.uStop))
+        {
+            l_pIt++;
+            continue;
+        }
+
+        //skipping all decimal digits
+        while ((*l_pIt) && (('0' <= *l_pIt) &&  (*l_pIt <= '9')))
+        {
+            l_pIt++;
+        }
+
+        if (0 == (*l_pIt))   { break; }
+        if (']' != (*l_pIt)) { l_pIt++; continue;}
+
+        l_pIt++;
+        l_pStart = l_pIt;
+
+        o_rPattern.push_back(l_stPattern);
+    }
+
+    if ((o_rPattern.size()) && (l_pIt-l_pStart))
+    {
+        o_rPattern.back().cPrefix += std::string(l_pStart, l_pIt-l_pStart);
+    }
+
+    free(l_pPattern);
+
+    if (!o_rPattern.size())
+    {
+        return false;
+    }
+
+    return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CFuncRoot::SetFuncDesc(stFuncDesc* i_pDesc)
+{
+    m_pDesc = i_pDesc;
 }
 
 
@@ -824,14 +964,21 @@ void CFuncTrace::ParseFormat()
                                 ADD_ARG(P7TRACE_ARG_TYPE_INT64, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT64), l_bSuccess);
                             }
                         }
-                        else if  (EPREFIX_TYPE_I32 == l_ePrefix)
+                        else if (EPREFIX_TYPE_I32 == l_ePrefix)
                         {
                             //4 bytes integer
                             ADD_ARG(P7TRACE_ARG_TYPE_INT32, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT32), l_bSuccess);
                         }
                         else if (EPREFIX_TYPE_I  == l_ePrefix)
                         {
-                            ADD_ARG(P7TRACE_ARG_TYPE_INT32, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT32), l_bSuccess);
+                            if (m_szTargetCpuBytes < 8)
+                            {
+                                ADD_ARG(P7TRACE_ARG_TYPE_INT32, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT32), l_bSuccess);
+                            }
+                            else
+                            {
+                                ADD_ARG(P7TRACE_ARG_TYPE_INT64, GetPlatformTypeSize(P7TRACE_ARG_TYPE_INT64), l_bSuccess);
+                            }
                         }
                         else if (EPREFIX_TYPE_J == l_ePrefix)
                         {
@@ -1138,25 +1285,28 @@ CFuncModule::CFuncModule(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i_p
         return;
     }
 
+
     m_pName = GetParameterStrValue(m_cArgs[m_pDesc->pArgs[eRegModNameIndex]]);
-    m_pVerbosity = GetParameterRawValue(m_cArgs[m_pDesc->pArgs[eRegModLevelIndex]]);
-    if (eErrorNo == m_eError)
-    {
-        m_uHash = _getHash(m_pName);
-
-
-        INIT_EXT_HEADER(m_sModule.sCommonRaw, EP7USER_TYPE_TRACE, EP7TRACE_TYPE_MODULE, sizeof(sP7Trace_Module));
-        //l_pModule->sCommon.dwSize    = sizeof(sP7Trace_Module);
-        //l_pModule->sCommon.dwType    = EP7USER_TYPE_TRACE;
-        //l_pModule->sCommon.dwSubType = EP7TRACE_TYPE_MODULE;
-
-        m_sModule.eVerbosity        = EP7TRACE_LEVEL_TRACE;
-        m_sModule.wModuleID         = 0;
-
-        strncpy(m_sModule.pName, m_pName, P7TRACE_THREAD_NAME_LENGTH);
-        m_sModule.pName[P7TRACE_THREAD_NAME_LENGTH - 1] = 0;
-    }
+    initialize();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CFuncModule::CFuncModule(CFuncRoot* i_pRoot, const char* i_pName)
+    : CFuncRoot(i_pRoot)
+    , m_pName(OSSTRDUP(i_pName))
+    , m_pVerbosity(NULL)
+    , m_wId(0)
+    , m_uHash(0)
+{
+    if (eErrorNo != m_eError)
+    {
+        return;
+    }
+
+    initialize();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CFuncModule::~CFuncModule()
@@ -1188,6 +1338,31 @@ void CFuncModule::SetId(tUINT16 i_wId)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CFuncModule::initialize()
+{
+    memset(&m_sModule, 0, sizeof(m_sModule));
+
+    m_pVerbosity = GetParameterRawValue(m_cArgs[m_pDesc->pArgs[eRegModLevelIndex]]);
+    if (eErrorNo == m_eError)
+    {
+        m_uHash = _getHash(m_pName);
+
+
+        INIT_EXT_HEADER(m_sModule.sCommonRaw, EP7USER_TYPE_TRACE, EP7TRACE_TYPE_MODULE, sizeof(sP7Trace_Module));
+        //l_pModule->sCommon.dwSize    = sizeof(sP7Trace_Module);
+        //l_pModule->sCommon.dwType    = EP7USER_TYPE_TRACE;
+        //l_pModule->sCommon.dwSubType = EP7TRACE_TYPE_MODULE;
+
+        m_sModule.eVerbosity        = EP7TRACE_LEVEL_TRACE;
+        m_sModule.wModuleID         = 0;
+
+        strncpy(m_sModule.pName, m_pName, P7TRACE_MODULE_NAME_LENGTH);
+        m_sModule.pName[P7TRACE_MODULE_NAME_LENGTH - 1] = 0;
+    }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1210,62 +1385,31 @@ CFuncCounter::CFuncCounter(CpreFile *i_pFile, stFuncDesc *i_pDesc, const char *i
     }
 
     m_pName = GetParameterStrValue(m_cArgs[m_pDesc->pArgs[eMkCounterNameIndex]]);
-    if (eErrorNo == m_eError)
-    {
-        m_uHash = _getHash(m_pName);
-
-        size_t l_szCounter = sizeof(sP7Tel_Counter_v2) - P7TELEMETRY_COUNTER_NAME_MIN_LENGTH_V2 * sizeof(tWCHAR);
-        size_t l_szName    = strlen(m_pName) + 1;
-        l_szCounter += l_szName * sizeof(tWCHAR);
-
-        m_pCounter = (sP7Tel_Counter_v2*)malloc(l_szCounter);
-
-        memset(m_pCounter, 0, l_szCounter);
-
-        m_szCounter = l_szCounter;
-
-        INIT_EXT_HEADER(m_pCounter->sCommonRaw, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_COUNTER, l_szCounter);
-        //m_sCounter.sCommon.dwSize     = sizeof(sP7Tel_Counter);
-        //m_sCounter.sCommon.dwType     = EP7USER_TYPE_TELEMETRY;
-        //m_sCounter.sCommon.dwSubType  = EP7TEL_TYPE_COUNTER;
-
-        Convert_UTF8_To_UTF16(m_pName, m_pCounter->pName, (tUINT32)l_szName);
-        
-        m_pCounter->dbMin = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterMinIndex]]);
-    }
-
-    if (eErrorNo == m_eError)
-    {
-        m_pCounter->dbAlarmMin = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterAlarmMinIndex]]);
-    }
-
-    if (eErrorNo == m_eError)
-    {
-        m_pCounter->dbMax = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterMaxIndex]]);
-    }
-
-    if (eErrorNo == m_eError)
-    {
-        m_pCounter->dbAlarmMax = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterAlarmMaxIndex]]);
-    }
-
-    if (eErrorNo == m_eError)
-    {
-        char *l_pOn = GetParameterRawValue(m_cArgs[m_pDesc->pArgs[eMkCounterOnIndex]]);
-
-        if (    (0 == strcmp(l_pOn, "1"))
-             || (0 == strcmp(l_pOn, "true"))
-             || (0 == strcmp(l_pOn, "TRUE"))
-           )
-        {
-            m_pCounter->bOn = 1;
-        }
-        else
-        {
-            m_pCounter->bOn = 0;
-        }
-    }
+    initialize();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+CFuncCounter::CFuncCounter(CFuncRoot* i_pRoot, const char* i_pName)
+    : CFuncRoot(i_pRoot)
+    , m_pName(OSSTRDUP(i_pName))
+    , m_wId(0)
+    , m_uHash(0)
+    , m_pCounter(NULL)
+    , m_szCounter(0)
+    , m_dbMin(0.0)
+    , m_dbMinAlarm(0.0)
+    , m_dbMax(0.0)
+    , m_dbMaxAlarm(0.0)
+{
+    if (eErrorNo != m_eError)
+    {
+        return;
+    }
+
+    initialize();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CFuncCounter::~CFuncCounter()
@@ -1294,4 +1438,65 @@ void CFuncCounter::SetId(tUINT16 i_wId)
 
     m_wId           = i_wId;
     m_pCounter->wID = i_wId;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void CFuncCounter::initialize()
+{
+    if (eErrorNo == m_eError)
+    {
+        m_uHash = _getHash(m_pName);
+
+        size_t l_szCounter = sizeof(sP7Tel_Counter_v2) - P7TELEMETRY_COUNTER_NAME_MIN_LENGTH_V2 * sizeof(tWCHAR);
+        size_t l_szName    = strlen(m_pName) + 1;
+        l_szCounter += l_szName * sizeof(tWCHAR);
+
+        m_pCounter = (sP7Tel_Counter_v2*)malloc(l_szCounter);
+
+        memset(m_pCounter, 0, l_szCounter);
+
+        m_szCounter = l_szCounter;
+
+        INIT_EXT_HEADER(m_pCounter->sCommonRaw, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_COUNTER, l_szCounter);
+        //m_sCounter.sCommon.dwSize     = sizeof(sP7Tel_Counter);
+        //m_sCounter.sCommon.dwType     = EP7USER_TYPE_TELEMETRY;
+        //m_sCounter.sCommon.dwSubType  = EP7TEL_TYPE_COUNTER;
+
+        Convert_UTF8_To_UTF16(m_pName, m_pCounter->pName, (tUINT32)l_szName);
+
+        m_pCounter->dbMin = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterMinIndex]]);
+    }
+
+    if (eErrorNo == m_eError)
+    {
+        m_pCounter->dbAlarmMin = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterAlarmMinIndex]]);
+    }
+
+    if (eErrorNo == m_eError)
+    {
+        m_pCounter->dbMax = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterMaxIndex]]);
+    }
+
+    if (eErrorNo == m_eError)
+    {
+        m_pCounter->dbAlarmMax = GetParameterDoubleValue(m_cArgs[m_pDesc->pArgs[eMkCounterAlarmMaxIndex]]);
+    }
+
+    if (eErrorNo == m_eError)
+    {
+        char *l_pOn = GetParameterRawValue(m_cArgs[m_pDesc->pArgs[eMkCounterOnIndex]]);
+
+        if (    (0 == strcmp(l_pOn, "1"))
+            || (0 == strcmp(l_pOn, "true"))
+            || (0 == strcmp(l_pOn, "TRUE"))
+            )
+        {
+            m_pCounter->bOn = 1;
+        }
+        else
+        {
+            m_pCounter->bOn = 0;
+        }
+    }
 }

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #ifndef UP7_SESSION_FILE_H
@@ -26,7 +25,7 @@ private:
 
 public:
     CSessionFile(const tXCHAR *i_pName);
-    CSessionFile(CBList<CpreFile*> *i_pFiles, tUINT32  i_uSession, uint64_t i_qwEpochTime);
+    CSessionFile(CBList<CpreFile*> *i_pFiles, tUINT32  i_uSession, tUINT8 i_bCrc7, uint64_t i_qwEpochTime);
     virtual ~CSessionFile();
 
     eErrorCodes SetSession(uint32_t  i_uSession, uint8_t i_uSessionCrc7, uint64_t i_qwEpochTime);

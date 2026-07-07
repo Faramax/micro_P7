@@ -1,17 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7preCommon.h"
+#include "uP7version.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
@@ -28,6 +29,9 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
     }
 
     l_pGroup->GetChildFirst(&l_pFunc);
+
+    bool l_bRegisterModules = false;
+    bool l_bCreateCounters  = false;
 
     while (l_pFunc)
     {
@@ -59,17 +63,30 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
                 break;
             }
         }
-        else if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMOD))
+        else if (    (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMOD))
+                  || (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMODS))
+                )
         {
-            tXCHAR *l_pName       = NULL;
+            tXCHAR *l_pFName       = NULL;
             tINT32  l_iNameIndex  = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iLevelIndex = UP7_FUNC_UNDEFINED_INDEX;
-            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pName))
+            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pFName))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_REGMOD_NAME, &l_iNameIndex))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_REGMOD_LEVEL, &l_iLevelIndex))
                )
             {
-                stFuncDesc *l_pFunction = new stFuncDesc(l_pName, stFuncDesc::eRegisterModule);
+                stFuncDesc::eType l_eType = stFuncDesc::eType::eCount;
+                if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_REGMOD))
+                {
+                    l_eType = stFuncDesc::eRegisterModule;
+                }
+                else
+                {
+                    l_eType = stFuncDesc::eRegisterModules;
+                    l_bRegisterModules = true;
+                }
+
+                stFuncDesc *l_pFunction = new stFuncDesc(l_pFName, l_eType);
                 l_pFunction->pArgs[eRegModNameIndex]  = l_iNameIndex;
                 l_pFunction->pArgs[eRegModLevelIndex] = l_iLevelIndex;
                 o_rFunctions.Push_Last(l_pFunction);
@@ -80,16 +97,18 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
                 break;
             }
         }
-        if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTER))
+        else if (    (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTER))
+                  || (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTERS))
+                )
         {
-            tXCHAR *l_pName      = NULL;
+            tXCHAR *l_pFName      = NULL;
             tINT32  l_iNameIndex = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iMinIndex  = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iAMinIndex = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iMaxIndex  = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iAMaxIndex = UP7_FUNC_UNDEFINED_INDEX;
             tINT32  l_iOnIndex   = UP7_FUNC_UNDEFINED_INDEX;
-            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pName))
+            if (    (Cfg::eOk == l_pFunc->GetAttrText(XML_NARG_OPTIONS_FUNC_NAME, &l_pFName))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_NAME, &l_iNameIndex))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_MIN , &l_iMinIndex))
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_AMIN, &l_iAMinIndex))
@@ -98,7 +117,18 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
                  && (Cfg::eOk == l_pFunc->GetAttrInt32(XML_NARG_OPTIONS_FUNC_MKCOUNTER_ON  , &l_iOnIndex))
                )
             {
-                stFuncDesc *l_pFunction = new stFuncDesc(l_pName, stFuncDesc::eCreateCounter);
+                stFuncDesc::eType l_eType = stFuncDesc::eType::eCount;
+                if (0 == PStrCmp(l_pName, XML_NODE_OPTIONS_FUNC_MKCOUNTER))
+                {
+                    l_eType = stFuncDesc::eCreateCounter;
+                }
+                else
+                {
+                    l_eType = stFuncDesc::eCreateCounters;
+                    l_bCreateCounters = true;
+                }
+
+                stFuncDesc *l_pFunction = new stFuncDesc(l_pFName, l_eType);
                 l_pFunction->pArgs[eMkCounterNameIndex]     = l_iNameIndex;
                 l_pFunction->pArgs[eMkCounterMinIndex]      = l_iMinIndex;
                 l_pFunction->pArgs[eMkCounterAlarmMinIndex] = l_iAMinIndex;
@@ -123,6 +153,21 @@ bool ParseFunctions(Cfg::INode *i_pOpions, CFunctionsList &o_rFunctions)
 
     SAFE_RELEASE(l_pFunc);
     SAFE_RELEASE(l_pGroup);
+
+
+    if (!l_bRegisterModules)
+    {
+        stFuncDesc *l_pFunction = new stFuncDesc(TM("uP7TrcRegisterModules"), stFuncDesc::eRegisterModules);
+        l_pFunction->InitDefaultArgs();
+        o_rFunctions.Push_First(l_pFunction);
+    }
+    
+    if (!l_bCreateCounters)
+    {
+        stFuncDesc *l_pFunction = new stFuncDesc(TM("uP7TelCreateCounters"), stFuncDesc::eCreateCounters);
+        l_pFunction->InitDefaultArgs();
+        o_rFunctions.Push_First(l_pFunction);
+    }
 
 
     if (    (l_bReturn)
@@ -159,28 +204,56 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
 
     if (4 > i_iArgC)
     {
-        printf("uP7preProcessor <config.xml> <sources files dir> <output dir>\n");
-        printf("Not all arguments are specified\n");
-        printf("Please refer to documentation for further details\n");
-        l_iReturn = eErrorArguments;
+        if (    (1 < i_iArgC) 
+             && (0 == PStrCmp(i_pArgV[1], TM("--h")))
+           )
+        {
+            printf("Usage:\n");
+            printf(" > uP7preProcessor <cfg.xml> <src files dir 0> ... <src files dir N> <output dir>\n");
+            printf("Help:\n");
+            printf(" > uP7preProcessor --h\n");
+            printf("Version:\n");
+            printf(" > uP7preProcessor --v\n");
+
+        }
+        else if (    (1 < i_iArgC) 
+                  && (0 == PStrCmp(i_pArgV[1], TM("--v")))
+                )
+        {
+            printf("Version: %u.%u\n", uP7_VERSION_MAJOR, uP7_VERSION_MINOR);
+        }
+        else
+        {
+            printf("Error: Not all arguments were specified\n");
+            printf("uP7preProcessor configuration error, please use --h to get help\n");
+            printf("or refer to documentation for further details\n");
+            l_iReturn = eErrorArguments;
+        }
+
         goto l_lblExit;
     }
 
-    if (!CFSYS::Directory_Exists(i_pArgV[DIR_SRC_INDEX]))
+    for (int l_iI = DIR_SRC_INDEX; l_iI < DIR_OUT_INDEX; l_iI++)
     {
-        printf("Source folder doesn't exists\n");
-        l_iReturn = eErrorArguments;
-        goto l_lblExit;
+        if (CFSYS::Directory_Exists(i_pArgV[l_iI]))
+        {
+            l_cManager.AddSourcesDir(i_pArgV[l_iI]);
+        }
+        else
+        {
+            OSPRINT(TM("Source folder doesn't exists {%s}\n"), i_pArgV[l_iI]);
+            l_iReturn = eErrorArguments;
+            goto l_lblExit;
+        }
     }
 
     if (!CFSYS::Directory_Exists(i_pArgV[DIR_OUT_INDEX]))
     {
-        printf("Source folder doesn't exists\n");
+        OSPRINT(TM("Output folder doesn't exists {%s}\n"), i_pArgV[DIR_OUT_INDEX]);
         l_iReturn = eErrorArguments;
         goto l_lblExit;
     }
 
-    l_cManager.SetSourcesDir(i_pArgV[DIR_SRC_INDEX]);
     l_cManager.SetOutputDir(i_pArgV[DIR_OUT_INDEX]);
 
     l_iDoc = IBDoc_Load(i_pArgV[CFG_FILE_INDEX]);
@@ -238,8 +311,17 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         }
         else
         {
-            printf("uP7preProcessor config file opening/parsing error: unknown Wchar size\n");
+            printf("uP7preProcessor config file opening/parsing error: unknown wchar_t size\n");
             l_iReturn = eErrorXmlParsing;
+        }
+
+        tXCHAR *l_pTestMode = NULL;
+        if (    (Cfg::eOk == l_pCPU->GetAttrText(XML_ATTE_OPTIONS_PROJECT_TEST_MODE, &l_pTestMode))
+             && (0 == PStrICmp(l_pTestMode, TM("true")))
+           )
+        {
+            l_cManager.SetTargetCpuWCharBitsCount(sizeof(wchar_t)*8);
+            l_cManager.SetTargetCpuBitsCount(sizeof(void*)*8);
         }
 
         tXCHAR *l_pIdsHeader = NULL;
@@ -250,6 +332,25 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         {
             l_cManager.EnableIDsHeader();
         }
+
+        tXCHAR *l_pIdMode = NULL;
+        l_pCPU->GetAttrText(XML_ATTE_OPTIONS_PROJECT_CONSECUTIVE_ID, &l_pIdMode);
+        if (    (l_pIdMode)
+             && (0 == PStrICmp(l_pIdMode, TM("true")))
+           )
+        {
+            l_cManager.EnableConsecutiveId();
+        }
+
+        tXCHAR *l_pVerbose = NULL;
+        l_pCPU->GetAttrText(XML_ATTE_OPTIONS_PROJECT_VERBOSE, &l_pVerbose);
+        if (    (l_pVerbose)
+             && (0 == PStrICmp(l_pVerbose, TM("true")))
+           )
+        {
+            l_cManager.EnableVerbose();
+        }
+
 
         l_pCPU->Release();
         l_pCPU = NULL;
@@ -270,8 +371,11 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
 
         if (l_pMask)
         {
-            l_cDir.Set(i_pArgV[DIR_SRC_INDEX]);
-            CFSYS::Enumerate_Files(&l_cFiles, &l_cDir, l_pMask);
+            for (int l_iI = DIR_SRC_INDEX; l_iI < DIR_OUT_INDEX; l_iI++)
+            {
+                l_cDir.Set(i_pArgV[l_iI]);
+                CFSYS::Enumerate_Files(&l_cFiles, &l_cDir, l_pMask);
+            }
         }
 
         Cfg::INode *l_pNext = NULL;
@@ -421,7 +525,7 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         goto l_lblExit;
     }
 
-    l_iReturn = l_cManager.Process();
+    l_iReturn = l_cManager.Process(l_pFiles);
 
     //save files & hashes
     if (eErrorNo == l_iReturn)

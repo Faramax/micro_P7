@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
@@ -144,6 +143,7 @@ public:
 
         *o_pHandle = (CShared::hShared)l_pShared;
 
+#if !defined(__GNUC__)
         __try
         {
             memcpy(l_pBuffer, i_pData, i_wSize);
@@ -157,6 +157,9 @@ public:
             l_bReturn  = FALSE;
             goto l_lblExit;
         }
+#else
+        memcpy(l_pBuffer, i_pData, i_wSize);
+#endif
 
     l_lblExit:
         if (l_pName)
@@ -250,6 +253,7 @@ public:
             goto l_lblExit;
         }
     
+#if !defined(__GNUC__)
         __try
         {
             memcpy(o_pData, l_pBuffer, i_wSize);
@@ -263,6 +267,9 @@ public:
             l_bReturn = FALSE;
             goto l_lblExit;
         }
+#else
+        memcpy(o_pData, l_pBuffer, i_wSize);
+#endif
 
     l_lblExit:
         if (l_pName)
@@ -347,6 +354,7 @@ public:
             goto l_lblExit;
         }
     
+#if !defined(__GNUC__)
         __try
         {
             memcpy(l_pBuffer, i_pData, i_wSize);
@@ -360,6 +368,9 @@ public:
             l_bReturn = FALSE;
             goto l_lblExit;
         }
+#else
+        memcpy(l_pBuffer, i_pData, i_wSize);
+#endif
 
     l_lblExit:
         if (l_pName)

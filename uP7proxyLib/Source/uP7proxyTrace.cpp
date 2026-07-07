@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -78,6 +77,7 @@ CProxyTrace::CProxyTrace(CWString      &i_rName,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CProxyTrace::~CProxyTrace()
 {
+    On_Flush(m_uClientId, NULL);
     m_cTrcDesc.Clear(TRUE);
     m_cModDesc.Clear(TRUE);
 }
@@ -223,7 +223,6 @@ void CProxyTrace::SetStartTime(uint64_t i_qwStartTime)
     m_qwCpuStartTime = i_qwStartTime;
 
     GetEpochTime(&m_sHeader_Info.dwTime_Hi, &m_sHeader_Info.dwTime_Lo);
-    m_qwHostProxyCreationTime = GetPerformanceCounter();
 
     if (m_iTime)
     {
@@ -445,13 +444,19 @@ size_t CProxyTrace::Process(const stProxyPacket *i_pPackets)
 
                 if (!m_bConvertEndianess)
                 {
-                    m_qwCpuProxyCreationTime = l_pTime->qwCpuCurrenTime;
+                    if (!m_iTime)
+                    {
+                        m_qwCpuProxyCreationTime = l_pTime->qwCpuCurrenTime;
+                    }
                     m_qwCpuStartTime         = l_pTime->qwCpuStartTime;
                     m_qwCpuFreq              = l_pTime->qwCpuFreq;
                 }
                 else
                 {
-                    m_qwCpuProxyCreationTime = ntohqw(l_pTime->qwCpuCurrenTime);
+                    if (!m_iTime)
+                    {
+                        m_qwCpuProxyCreationTime = ntohqw(l_pTime->qwCpuCurrenTime);
+                    }
                     m_qwCpuStartTime         = ntohqw(l_pTime->qwCpuStartTime);
                     m_qwCpuFreq              = ntohqw(l_pTime->qwCpuFreq);
                 }

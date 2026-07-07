@@ -1,26 +1,26 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "common.h"
 #include <atomic>
+#include <random>
 
 #define T5_DURATION_MS 10000
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class CT6P7Sink: public CClTextSink
 {
-    size_t      m_szCount;
-    std::mutex  m_cLock;
+    size_t             m_szCount;
+    std::mutex         m_cLock;
 public:
     CT6P7Sink()
     {
@@ -91,13 +91,34 @@ public:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////uP7 callbacks/////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-static std::atomic<bool>     g_bCut(false);
-static std::atomic<uint64_t> g_qwCutOffset(0);
-static std::atomic<uint64_t> g_qwBytesCount(0);
 
-uint64_t t6getTimerFrequency(void *i_pCtx)      { UNUSED_ARG(i_pCtx); return GetPerformanceFrequency(); }
-uint64_t t6getTimerValue(void *i_pCtx)          { UNUSED_ARG(i_pCtx); return GetPerformanceCounter();   }
-uint32_t t6getCurrentThreadId(void *i_pCtx)     { UNUSED_ARG(i_pCtx); return CProc::Get_Thread_Id();    }
+enum eOp : int
+{
+    eOpNone = 0,
+    eOpStart,
+
+    eOpCut = eOpStart,
+    eOpCoruptSid,
+    eOpCoruptLenPlus,
+    eOpCoruptLenZero,
+    eOpCoruptType,
+
+    eOpEnd = eOpCoruptType,
+
+    eOpMax
+};
+
+
+static std::atomic<eOp>                 g_bCorrupt(eOpNone);
+std::random_device                      g_cRd;
+std::mt19937                            g_cGenS(g_cRd());
+std::mt19937                            g_cGenO(g_cRd());
+std::uniform_int_distribution<uint16_t> g_cSize(1, 7);
+std::uniform_int_distribution<int>      g_cOp(eOpStart, eOpEnd);
+
+uint64_t t6getTimerFrequency(void *i_pCtx)  { UNUSED_ARG(i_pCtx); return GetPerformanceFrequency(); }
+uint64_t t6getTimerValue(void *i_pCtx)      { UNUSED_ARG(i_pCtx); return GetPerformanceCounter();   }
+uint32_t t6getCurrentThreadId(void *i_pCtx) { UNUSED_ARG(i_pCtx); return CProc::Get_Thread_Id();    }
 bool     t6sendPacket(void                         *i_pCtx, 
                       enum euP7packetRank           i_eRank, 
                       const struct stP7packetChunk *i_pChunks,
@@ -112,22 +133,48 @@ bool     t6sendPacket(void                         *i_pCtx,
         return false;
     }
 
+    
+    eOp l_eOp = g_bCorrupt.load();
+
+
     while (i_szChunks)
     {
-        g_qwBytesCount += i_pChunks->szData;
+        uint8_t *pData  = (uint8_t*)i_pChunks->pData;
+        size_t   szData = i_pChunks->szData;
 
-        if (    (g_bCut) 
-             && (i_pChunks->szData > 1)
-             && (g_qwBytesCount >= g_qwCutOffset)
-           )
+
+        if (l_eOp != eOpNone)
         {
-            g_bCut = false;
-            if (!l_pFifo->Write(((const uint8_t*)i_pChunks->pData) + 1, i_pChunks->szData - 1))
+            printf("Operation %d\n", l_eOp);
+            stuP7baseHdr *pBase = (stuP7baseHdr*)pData;
+
+            if (eOpCut == l_eOp)
             {
-                break;
+                pData++;
+                szData--;
             }
+            else if (eOpCoruptSid == l_eOp)
+            {
+                pBase->uSessionId = ~pBase->uSessionId;
+            }
+            else if (eOpCoruptLenPlus == l_eOp)
+            {
+                pBase->wSize += g_cSize(g_cGenS);
+            }
+            else if (eOpCoruptLenZero == l_eOp)
+            {
+                pBase->wSize = 0;
+            }
+            else if (eOpCoruptType == l_eOp)
+            {
+                pBase->bType = ~pBase->bType;
+            }
+
+            g_bCorrupt.store(eOpNone);
+            l_eOp = eOpNone;
         }
-        else if (!l_pFifo->Write(i_pChunks->pData, i_pChunks->szData))
+
+        if (!l_pFifo->Write(pData, szData))
         {
             break;
         }
@@ -148,8 +195,8 @@ bool t6Resync(const tXCHAR *i_pSessionFolder)
     tXCHAR      l_pArgs[4096];
     bool        l_bReturn = true;
 
-    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=0 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Pool=16384"), l_qwAdd);
-    //PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=0 /P7.Sink=Baical /P7.Pool=16384"), 0);
+    PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=4 /P7.Sink=ExternalSinc /P7.ExtAddr=%llX /P7.Pool=16384"), l_qwAdd);
+    //PSPrint(l_pArgs, LENGTH(l_pArgs), TM("/P7.Verb=4 /P7.Sink=Baical /P7.Pool=16384"), 0);
 
     IuP7proxy *l_iProxy = uP7createProxy(l_pArgs, i_pSessionFolder);
     IuP7Fifo  *l_iFifo  = NULL; 
@@ -227,7 +274,7 @@ bool t6Resync(const tXCHAR *i_pSessionFolder)
 
             for (size_t l_szI = 0; l_szI < l_szMessages; l_szI++)
             {
-                uP7ERR(55, l_hModule1, "T6 test message #%05zu {%s}", l_szI, l_pText[l_szI % 10]);
+                uP7ERR(50, l_hModule1, "T6 test message #%05zu {%s}", l_szI, l_pText[l_szI % 10]);
 
                 if ((l_szI + 1) == l_szMessages)
                 {
@@ -241,38 +288,57 @@ bool t6Resync(const tXCHAR *i_pSessionFolder)
 
     size_t l_szCount = 1000;
     size_t l_szPrev  = 0;
-    for (int iI = 1; iI < 10; iI++)
+    size_t l_szIter  = 20;
+    for (size_t iI = 1; iI < l_szIter; iI++)
     {
-        g_bCut = false;
+        //enum eOp
+        //{
+        //    eOpNone = 0,
+        //    eOpCut,
+        //    eOpCoruptSid,
+        //    eOpCoruptLen,
+        //    eOpCoruptType,
+        //    eOpCoruptCrc,
+        //    eOpMax
+        //};
+
+
+        g_bCorrupt.store(eOpNone);
+
         l_cP7Sink.ClearCount();
 
-        l_szPrev = l_szCount * iI / 10;
+        //Each cycle we will deliver 50, 100, 150, 200 ... 1000 messages
+        l_szPrev = l_szCount * iI / l_szIter;
         l_szMessages = l_szPrev;
 
+        //wait to deliver messages
         while ( 0!= l_szMessages)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
+        //wait for flushing ...
         std::this_thread::sleep_for(std::chrono::milliseconds(250));
 
-        g_bCut         = true;
-        g_qwCutOffset  = iI * 32;
-        g_qwBytesCount = 0;
+        //set corruption flag
+        g_bCorrupt.store((eOp)g_cOp(g_cGenO));
 
+        //Each cycle we will deviver 950, 900, 850, ... 100 messages
         l_szMessages = l_szCount - l_szPrev;
 
+        //wait to deliver messages
         while ( 0!= l_szMessages)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
 
+        //wait for flushing ...
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
     
-
+        //checking how much were recieved
         if (l_cP7Sink.GetCount() != l_szCount - 1)
         {
-            printf("ERROR: iteration %i, received: %zu\n", iI, l_cP7Sink.GetCount());
+            printf("ERROR: iteration %zu, received: %zu\n", iI, l_cP7Sink.GetCount());
             l_bReturn = false;
             break;
         }

@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include "uP7common.h"
@@ -71,6 +70,7 @@ CProxyTelemetry::CProxyTelemetry(CWString      &i_rName,
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CProxyTelemetry::~CProxyTelemetry()
 {
+    On_Flush(m_uClientId, NULL);
     m_cDesc.Clear(TRUE);
 }
 
@@ -262,7 +262,6 @@ void CProxyTelemetry::SetStartTime(uint64_t i_qwStartTime)
     m_qwCpuStartTime = i_qwStartTime;
 
     GetEpochTime(&m_sHeader_Info.dwTime_Hi, &m_sHeader_Info.dwTime_Lo);
-    m_qwHostProxyCreationTime = GetPerformanceCounter();
 
     if (m_iTime)
     {
@@ -445,13 +444,19 @@ size_t CProxyTelemetry::Process(const stProxyPacket *i_pPackets)
 
                 if (!m_bConvertEndianess)
                 {
-                    m_qwCpuProxyCreationTime = l_pTime->qwCpuCurrenTime;
+                    if (!m_iTime)
+                    {
+                        m_qwCpuProxyCreationTime = l_pTime->qwCpuCurrenTime;
+                    }
                     m_qwCpuStartTime         = l_pTime->qwCpuStartTime;
                     m_qwCpuFreq              = l_pTime->qwCpuFreq;
                 }
                 else
                 {
-                    m_qwCpuProxyCreationTime = ntohqw(l_pTime->qwCpuCurrenTime);
+                    if (!m_iTime)
+                    {
+                        m_qwCpuProxyCreationTime = ntohqw(l_pTime->qwCpuCurrenTime);
+                    }
                     m_qwCpuStartTime         = ntohqw(l_pTime->qwCpuStartTime);
                     m_qwCpuFreq              = ntohqw(l_pTime->qwCpuFreq);
                 }
@@ -540,7 +545,7 @@ void CProxyTelemetry::On_Receive(tUINT32 i_dwChannel,
     
                     if (!m_pFifo->Send(&l_stEnableOut, sizeof(stuP7telOnOffHdr)))
                     {
-                        uWARNING(TM("[CPU#%d] Can't send verobsity update"), (int)m_bId);
+                        uWARNING(TM("[CPU#%d] Can't send verbosity update"), (int)m_bId);
                     }
                 }
                 else if (EP7TEL_TYPE_DELETE == GET_EXT_HEADER_SUBTYPE(l_sHeader))
@@ -592,7 +597,7 @@ void CProxyTelemetry::On_Flush(tUINT32 i_dwChannel, tBOOL *io_pCrash)
     if (!m_bClosed)
     {
         sP7Ext_Raw l_sHeader;
-        INIT_EXT_HEADER(l_sHeader, EP7USER_TYPE_TRACE, EP7TRACE_TYPE_CLOSE, sizeof(sP7Ext_Raw));
+        INIT_EXT_HEADER(l_sHeader, EP7USER_TYPE_TELEMETRY_V2, EP7TEL_TYPE_CLOSE, sizeof(sP7Ext_Raw));
 
         AddChunk(&l_sHeader, sizeof(sP7Ext_Raw));
         SendChunks();

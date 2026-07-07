@@ -1,14 +1,13 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                                                                                                     /
-// This library is free software; you can redistribute it and/or modify it under the terms of the  GNU  Lesser  General/
-// Public License as published by the Free Software Foundation; either version 3.0 of the License, or (at your  option)/
-// any later version.                                                                                                  /
+// This library is free software; you can redistribute it and/or modify it under the terms of the provided License.    /
+//                                                                                                                     /
 // This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even  the  implied/
 // warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more/
 // details.                                                                                                            /
-// You should have received a copy of the GNU Lesser General Public License along with this library.                   /
+// You should have received a copy of the the License along with this library.                                         /
 //                                                                                                                     /
-// 2012-2021 (c) Baical                                                                                                /
+// 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 #include <stdlib.h>     /* srand, rand */                                
@@ -170,7 +169,7 @@ void CpuStart()
 
     uP7init(&l_stCtx);
 
-    uP7INF(2, uP7M_XML_MODULE, "Start test", 0);
+    uP7INF(1, uP7M_XML_MODULE, "Start test", 0);
 
     while (     (!Is_Key_Hit())
              || (27 != Get_Char())
@@ -181,7 +180,7 @@ void CpuStart()
         
         uP7ProcessIncomingData(&l_stCtx);
 
-        uP7DBG(1, l_stCtx.hModule, "Iteration %I64d", l_qwIter++);
+        uP7DBG(2, l_stCtx.hModule, "Iteration %I64d", l_qwIter++);
 
         uP7TelSentSample(uP7T_XML_COUNTER, l_dbIter);
         l_dbIter += 0.5;
@@ -196,4 +195,3 @@ void CpuStart()
 
     uP7INF(3, uP7M_XML_MODULE, "Stop test", 0);
 }
-
