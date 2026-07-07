@@ -187,7 +187,7 @@ if (BUILD_UP7_PREPROCESSOR)
     add_subdirectory(uP7preProcessor)
 endif()
 
-set(PRE_PROCESSOR ${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/P7preProcessor)
+set(PRE_PROCESSOR ${CMAKE_CURRENT_SOURCE_DIR}/uP7preProcessor/uP7preProcessor)
 set_target_properties(uP7 PROPERTIES PRE_PROCESSOR ${PRE_PROCESSOR})
 
 if (BUILD_UP7_TEST)
