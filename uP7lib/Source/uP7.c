@@ -426,6 +426,11 @@ void uP7TrcSetVerbosity(huP7Module i_hModule, enum euP7Level i_eVerbosity)
     uP7_UNLOCK();
 }
 
+enum euP7Level uP7TrcGetVerbosity(huP7Module i_hModule)
+{
+    return g_puP7.pModules[i_hModule].eLevel;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool uP7TrcRegisterModule(const char *i_pName, enum euP7Level i_eVerbosity, huP7Module *o_hModule)
 {

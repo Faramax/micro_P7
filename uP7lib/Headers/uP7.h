@@ -304,6 +304,8 @@ typedef uint32_t huP7Module;
 */
 void uP7TrcSetVerbosity(huP7Module i_hModule, enum euP7Level i_eVerbosity);
 
+enum euP7Level uP7TrcGetVerbosity(huP7Module i_hModule);
+
 /**
  * \brief function used to specify name for current thread, allows to have nice trace message formatting on Baical
  *        server. Call the function from the newly created thread & call uP7TrcUnregisterCurrentThread() right before  
