@@ -51,6 +51,7 @@ private:
     CpreManager       *m_pManager;
     tXCHAR            *m_pOsPath;
     char              *m_pDbPath; 
+    char              *m_pDbRelPath;
     tUINT8            *m_pData;
     size_t             m_szData;
     eModification      m_bModification;
@@ -69,6 +70,7 @@ public:
     virtual ~CpreFile();
     tBOOL                    IsVirtual()       { return m_bIsVirtual;    }
     const char              *GetPath()         { return m_pDbPath;       }
+    const char              *GetDbRelativePath();
     const tXCHAR            *GetOsPath()       { return m_pOsPath;       }
     const tUINT8            *GetHash()         { return m_pHash;         }
     CpreFile::eModification  GetModification() { return m_bModification; }

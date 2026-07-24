@@ -19,6 +19,7 @@ CpreFile::CpreFile(CpreManager *i_pManager, const tXCHAR *i_pName, eErrorCodes &
     : m_pManager(i_pManager)
     , m_pOsPath(NormalizePath(i_pName))
     , m_pDbPath(NULL)
+    , m_pDbRelPath(NULL)
     , m_pData(NULL)
     , m_szData(0)
     , m_bModification(eModified)
@@ -142,6 +143,7 @@ CpreFile::CpreFile(CpreManager *i_pManager, const tXCHAR *i_pName, Cfg::INode *i
     : m_pManager(i_pManager)
     , m_pOsPath(NormalizePath(i_pName))
     , m_pDbPath(NULL)
+    , m_pDbRelPath(NULL)
     , m_pData(NULL)
     , m_szData(0)
     , m_bModification(eReadOnly)
@@ -283,6 +285,12 @@ CpreFile::~CpreFile()
         m_pDbPath = NULL;
     }
 
+    if (m_pDbRelPath)
+    {
+        free(m_pDbRelPath);
+        m_pDbRelPath = NULL;
+    }
+
     if (m_pOsPath)
     {
         PStrFreeDub(m_pOsPath);
@@ -310,6 +318,28 @@ CpreFile::~CpreFile()
 
     m_cFunctions.Clear(TRUE);
     m_cBlocks.Clear(TRUE);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const char *CpreFile::GetDbRelativePath()
+{
+    if (!m_pDbRelPath)
+    {
+        CUtf8 l_cRelPath(m_pManager->GetRelativePath(m_pOsPath));
+        if (l_cRelPath.text())
+        {
+            size_t l_szLen = l_cRelPath.length();
+            m_pDbRelPath = (char*)malloc(l_szLen + 1);
+            if (m_pDbRelPath)
+            {
+                memcpy(m_pDbRelPath, l_cRelPath.text(), l_szLen);
+                m_pDbRelPath[l_szLen] = 0;
+            }
+        }
+    }
+
+    return (m_pDbRelPath) ? m_pDbRelPath : m_pDbPath;
 }
 
 

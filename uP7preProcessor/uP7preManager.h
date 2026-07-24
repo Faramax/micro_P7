@@ -81,6 +81,7 @@ public:
     int             Process(Cfg::INode *i_pFiles);
     eErrorCodes     ScanFunctions();
     tBOOL           SaveHashes(Cfg::INode *i_pFiles);
+    const tXCHAR   *GetRelativePath(const tXCHAR *i_pFilePath);
 private:
     void            SortFilesByNames();
 
@@ -92,7 +93,6 @@ private:
     eErrorCodes     ScanHash(const tXCHAR *i_pTxtHash, tUINT8 o_pSessionHash[CKeccak::EBITS_256 / 8]);
     eErrorCodes     CheckDuplicates();
     eErrorCodes     GenerateDefineName(const char *i_pName, char *o_pDefine, size_t i_szDefineMax);
-    const tXCHAR   *GetRelativePath(const tXCHAR *i_pFilePath);
 
 
     inline void     PrintHash(const tUINT8 i_pHashBin[CKeccak::EBITS_256 / 8], tXCHAR *o_pHashTxt)

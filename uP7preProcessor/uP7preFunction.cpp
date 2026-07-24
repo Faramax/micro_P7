@@ -1111,9 +1111,9 @@ void CFuncTrace::ParseFormat()
             m_szBuffer += sizeof(sP7Trace_Arg) * l_dwArgsCount;
         }
 
-        if (m_pFile->GetPath())
+        if (m_pFile->GetDbRelativePath())
         {
-            l_szFile += (tUINT32)strlen(m_pFile->GetPath());
+            l_szFile += (tUINT32)strlen(m_pFile->GetDbRelativePath());
         }
         l_szFile ++; //last 0
 
@@ -1167,9 +1167,9 @@ void CFuncTrace::ParseFormat()
         Convert_UTF8_To_UTF16(m_pFormat, (tWCHAR*)(m_pBuffer + l_szOffset), (tUINT32)((m_szBuffer - l_szOffset) / sizeof(tWCHAR)));
         l_szOffset += l_szFormat;
 
-        if (m_pFile->GetPath())
+        if (m_pFile->GetDbRelativePath())
         {
-            memcpy(m_pBuffer + l_szOffset, m_pFile->GetPath(), l_szFile);
+            memcpy(m_pBuffer + l_szOffset, m_pFile->GetDbRelativePath(), l_szFile);
             l_szOffset += l_szFile;
         }
         else
