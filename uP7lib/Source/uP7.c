@@ -10,6 +10,7 @@
 // 2012-2024 (c) Baical                                                                                                /
 //                                                                                                                     /
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+#include <stdatomic.h>
 #include "uP7.h"
 #include "uP7hash.h"
 #include "uP7context.h"
@@ -546,6 +547,7 @@ bool uP7TrcSentEmb(uint16_t       i_wId,
     struct stuP7Trace      *l_pTraceDesc;//not initialized on purpose
     const struct stuP7arg  *l_pArgs;     //not initialized on purpose
     const struct stuP7arg  *l_pArgsEnd;  //not initialized on purpose 
+    uint32_t                l_uSeqN;     //not initialized on purpose
 
     uP7_LOCK();
     if (    (!g_puP7.bInitialized)
@@ -557,7 +559,8 @@ bool uP7TrcSentEmb(uint16_t       i_wId,
         goto l_lblExit;
     }
 
-    g_puP7.uTrcCounter ++;
+    //traces may be sent from interrupts: the number is taken from the increment itself to stay unique
+    l_uSeqN = atomic_fetch_add_explicit(&g_puP7.uTrcCounter, 1, memory_order_relaxed) + 1;
 
     if (    (g_puP7.bTraceDirect)
          && (i_wId < g_puP7.szTraces)
@@ -614,7 +617,7 @@ bool uP7TrcSentEmb(uint16_t       i_wId,
     }
 
     l_stTrace.qwTime     = g_puP7.cbTimerValue(g_puP7.pCtxTimer);
-    l_stTrace.uSeqN      = g_puP7.uTrcCounter;
+    l_stTrace.uSeqN      = l_uSeqN;
     l_stTrace.uThreadId  = g_puP7.cbGetCurrentThreadId ? g_puP7.cbGetCurrentThreadId(g_puP7.pCtxThread) : 0;
     l_stTrace.wId        = i_wId;
 

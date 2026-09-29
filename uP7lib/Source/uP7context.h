@@ -37,7 +37,7 @@ struct stuP7context
 
     enum euP7Level          eDefaultVerbosity;    /**< Default verbosity*/  
 
-    uint32_t                uTrcCounter;          /**< Trace items counter*/  
+    _Atomic uint32_t        uTrcCounter;          /**< Trace items counter, atomic: traces may be sent from interrupts*/  
 
     uint64_t                qwCreationTime;       /**< Creation time*/  
 
