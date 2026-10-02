@@ -548,6 +548,7 @@ void CuP7proxy::ProcRoutine()
                 else
                 {
                     uCRITICAL(TM("cpu#%d is not initialized, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
+                    l_cFifoGroup.PushBuffer(l_pBuffer);
                 }
             }
         }
@@ -664,6 +665,7 @@ void CuP7proxy::ProcRoutine()
                     else
                     {
                         uCRITICAL(TM("cpu#%d is not initialized, function IuP7proxy::RegisterCpu() wasn't called?"), (int)l_bCpuId); 
+                        l_pFifos->Get_Data(l_pEl)->PushBuffer(l_pBuffer);
                     }
                 }
             }

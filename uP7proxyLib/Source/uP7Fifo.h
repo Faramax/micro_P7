@@ -128,6 +128,7 @@ public:
     bool UnregisterFifo(CuP7Fifo *i_pFifo);
     CuP7Fifo::stBuffer *PullBuffer();
     CuP7Fifo::stBuffer *PullBuffer(uint8_t i_bCpuId);
+    bool PushBuffer(CuP7Fifo::stBuffer *i_pBuffer);
 
     inline CFifoList *GetFifos() { return &m_cFifos; }
 

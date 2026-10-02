@@ -157,6 +157,37 @@ CuP7Fifo::stBuffer *CuP7FifoGroup::PullBuffer(uint8_t i_bCpuId)
     return l_pReturn;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool CuP7FifoGroup::PushBuffer(CuP7Fifo::stBuffer *i_pBuffer)
+{
+    if (!i_pBuffer)
+    {
+        return false;
+    }
+
+    LOCK_ENTER(m_hCS);
+
+    CuP7Fifo   *l_pFifo = NULL;
+    pAList_Cell l_pEl   = NULL;
+    while ((l_pEl = m_cFifos.Get_Next(l_pEl)))
+    {
+        CuP7Fifo *l_pTmp = m_cFifos.Get_Data(l_pEl);
+        if ((l_pTmp) && (l_pTmp->GetId() == i_pBuffer->bCpuId))
+        {
+            l_pFifo = l_pTmp;
+            break;
+        }
+    }
+    LOCK_EXIT(m_hCS);
+
+    if (l_pFifo)
+    {
+        l_pFifo->PushBuffer(i_pBuffer);
+    }
+
+    return l_pFifo ? true : false;
+}
+
 
 
 

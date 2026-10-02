@@ -139,6 +139,7 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
 {
     if (eState::eError == m_eObjState)
     {
+        m_iFifo->PushBuffer(i_pBuffer);
         return false;
     }
 
@@ -149,6 +150,7 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
 
     if (!l_pData)
     {
+        m_iFifo->PushBuffer(i_pBuffer);
         return false;
     }
 
