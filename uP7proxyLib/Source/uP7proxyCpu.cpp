@@ -416,6 +416,14 @@ bool CProxyCpu::SynchronizeSession(const uint8_t *i_pData, size_t i_szData)
                     uERROR(TM("[CPU#%d] Packet size is wrong %u!"), (int)m_bId, l_uPacketSize); 
                     l_bSuccess = false;
                 }
+                else if (l_uSessionId != l_uPacketSId)
+                {
+                    //a header of another session (or misaligned data) inside a synchronized run:
+                    //fail the run, otherwise l_uProcessed never advances and the loop spins forever
+                    uWARNING(TM("[CPU#%d] Unrecognized session ID: %I32u, Expected: %I32u"),
+                             (int)m_bId, l_uPacketSId, l_uSessionId);
+                    l_bSuccess = false;
+                }
 
                 if (    (l_uSessionId == l_uPacketSId)
                      && (l_bSuccess)
