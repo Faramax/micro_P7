@@ -118,5 +118,16 @@ int main(int i_iArgC, tXCHAR *i_pArgV[])
         return -1;
     }
 
+    printf("Execute t8ResyncForeignSid ... \n");
+    if (t8ResyncForeignSid(i_pArgV[1]))
+    {
+        printf("Succeed!\n");
+    }
+    else
+    {
+        printf("ERROR: Failed!\n");
+        return -1;
+    }
+
     return 0;
 }

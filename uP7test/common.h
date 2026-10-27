@@ -67,6 +67,7 @@ extern "C"
 #include "t5Time.h"
 #include "t6Resync.h"
 #include "t7Pattern.h"
+#include "t8ResyncForeignSid.h"
 
 extern uint32_t          g_uSessionId;
 extern uint8_t           g_bCrc7;

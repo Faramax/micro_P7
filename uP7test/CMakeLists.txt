@@ -32,6 +32,7 @@ set(SOURCES
         t5Time.cpp          t5Time.h
         t6Resync.cpp        t6Resync.h
         t7Pattern.cpp       t7Pattern.h
+        t8ResyncForeignSid.cpp t8ResyncForeignSid.h
    )
 
 add_executable(${PROJECT_NAME}
