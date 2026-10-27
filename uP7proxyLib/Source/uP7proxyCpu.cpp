@@ -28,6 +28,25 @@ static_assert(uP7_MAX_PACKET_SIZE < FIFO_MAX_BUFFER_SIZE, "FIFO buffer size is t
     }
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+static size_t GetMinPacketSize(uint8_t i_bType)
+{
+    switch (i_bType)
+    {
+        case uP7packetTrace:              return sizeof(stuP7traceHdr);
+        case uP7packetTraceVerbosiry:     return sizeof(stuP7traceVerbosityHdr);
+        case uP7packetTelemetryDouble:    return sizeof(stuP7telF8Hdr);
+        case uP7packetTelemetryFloat:     return sizeof(stuP7telF4Hdr);
+        case uP7packetTelemetryInt64:     return sizeof(stuP7telI8Hdr);
+        case uP7packetTelemetryInt32:     return sizeof(stuP7telI4Hdr);
+        case uP7packetTelemetryOnOff:     return sizeof(stuP7telOnOffHdr);
+        case uP7packetCreateTimeRequest:  return sizeof(stuP7timeReqHdr);
+        case uP7packetCreateTimeResponse: return sizeof(stuP7timeResHdr);
+        default:                          return sizeof(stuP7baseHdr);
+    }
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 CProxyCpu::CProxyCpu(CWString               &i_rName, 
@@ -183,7 +202,7 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
 
 
                 if (    (m_pTailHdr->uSessionId == m_uSessionId)
-                     && (m_pTailHdr->wSize > 0) 
+                     && (m_pTailHdr->wSize >= GetMinPacketSize(m_pTailHdr->bType))
                      && (m_pTailHdr->wSize < uP7_CPU_MAX_PACKET_SIZE)
                      && (m_pTailHdr->bType < uP7packetsMax)
                    )
@@ -248,7 +267,7 @@ bool CProxyCpu::Process(CuP7Fifo::stBuffer *i_pBuffer)
             }
 
             if (    (pHdr->uSessionId == m_uSessionId)
-                 && (pHdr->wSize > 0) 
+                 && (pHdr->wSize >= GetMinPacketSize(pHdr->bType))
                  && (pHdr->wSize < uP7_CPU_MAX_PACKET_SIZE)
                  && (pHdr->bType < uP7packetsMax)
                )
@@ -411,7 +430,7 @@ bool CProxyCpu::SynchronizeSession(const uint8_t *i_pData, size_t i_szData)
                     l_uPacketSize = ntohs(l_pHdr->wSize);
                 }
 
-                if ((l_uPacketSize <= 0) || (l_uPacketSize >= uP7_CPU_MAX_PACKET_SIZE))
+                if ((l_uPacketSize < GetMinPacketSize(l_pHdr->bType)) || (l_uPacketSize >= uP7_CPU_MAX_PACKET_SIZE))
                 {
                     uERROR(TM("[CPU#%d] Packet size is wrong %u!"), (int)m_bId, l_uPacketSize); 
                     l_bSuccess = false;
