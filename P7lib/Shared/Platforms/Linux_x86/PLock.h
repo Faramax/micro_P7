@@ -19,12 +19,16 @@
 typedef pthread_mutex_t           tLOCK;
 
 
+// Priority inheritance: real-time threads log through the same locks as normal-priority ones, and a
+// preempted normal-priority holder must not keep a real-time thread waiting (priority inversion).
 #define  LOCK_CREATE(i_Lock)       {\
                                        pthread_mutexattr_t l_sAttr;\
                                        memset(&l_sAttr, 0, sizeof(pthread_mutexattr_t));\
                                        pthread_mutexattr_init(&l_sAttr);\
                                        pthread_mutexattr_settype(&l_sAttr,\
                                                                  PTHREAD_MUTEX_RECURSIVE);\
+                                       pthread_mutexattr_setprotocol(&l_sAttr,\
+                                                                     PTHREAD_PRIO_INHERIT);\
                                        pthread_mutex_init(&i_Lock, &l_sAttr);\
                                        pthread_mutexattr_destroy(&l_sAttr);\
                                    }\
