@@ -72,6 +72,7 @@ private:
     tUINT32            m_dwBuffers_Count;
     CPFile             m_cFile;
     CWString           m_pDir;
+    CWString           m_cPrefix;
     sP7File_Header     m_cHeader;
     eRolling           m_eRolling;
     tUINT64            m_qwRolling_Value;

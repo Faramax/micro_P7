@@ -147,6 +147,13 @@
 //max     : 4294967296
 #define CLIENT_COMMAND_LINE_FILES_SIZE_MAX                    TM("/P7.FSize=")
 
+//Value: define a file name prefix, for example /P7.Prefix=mcu-log-
+//Allows several independent Sink=File clients to share the same /P7.Dir
+//without colliding: each client only creates, enumerates and rotates files
+//that start with its own prefix
+//default: no prefix (all files match *.p7d, legacy behaviour)
+#define CLIENT_COMMAND_LINE_FILE_PREFIX                        TM("/P7.Prefix=")
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //                          general settings                                   /

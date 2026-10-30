@@ -292,6 +292,17 @@ eClient_Status CClFile::Init_File(tXCHAR **i_pArgs,
     m_pDir.Realloc(4096);
 
     ////////////////////////////////////////////////////////////////////////////
+    //get optional file name prefix, allows several Sink=File clients to
+    //share the same directory without colliding on the same *.p7d file pool
+    l_pArgV = Get_Argument_Text_Value(i_pArgs, i_iCount,
+                                      (tXCHAR*)CLIENT_COMMAND_LINE_FILE_PREFIX
+                                     );
+    if (l_pArgV)
+    {
+        m_cPrefix.Set(l_pArgV);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
     //get maximum count of the log files
     l_pArgV = Get_Argument_Text_Value(i_pArgs, i_iCount,
                                       (tXCHAR*)CLIENT_COMMAND_LINE_FILES_COUNT_MAX
@@ -349,7 +360,10 @@ eClient_Status CClFile::Init_File(tXCHAR **i_pArgs,
          || (m_qwFiles_Max_Size)
        )
     {
-        CFSYS::Enumerate_Files(&m_cFiles, &m_pDir, TM("*.") P7_EXT, 0);
+        CWString l_cMask(m_cPrefix.Get() ? m_cPrefix.Get() : TM(""));
+        l_cMask.Append(1, TM("*.") P7_EXT);
+
+        CFSYS::Enumerate_Files(&m_cFiles, &m_pDir, l_cMask.Get(), 0);
 
         l_pStart   = NULL;
         l_dwDirLen = m_pDir.Length();
@@ -536,7 +550,7 @@ eClient_Status CClFile::Create_File()
     tUINT32        l_dwSec   = 0; 
     tUINT32        l_dwmSec  = 0;
     CWString       l_cFilePath;
-    tXCHAR         l_pFile_Name[64];
+    tXCHAR         l_pFile_Name[128];
 
     m_cFile.Close(TRUE);
 
@@ -553,7 +567,8 @@ eClient_Status CClFile::Create_File()
     {
         PSPrint(l_pFile_Name, 
                 LENGTH(l_pFile_Name), 
-                TM("/%04d-%02d-%02d--%02d-%02d-%02d.%03d.") P7_EXT,
+                TM("/%s%04d-%02d-%02d--%02d-%02d-%02d.%03d.") P7_EXT,
+                m_cPrefix.Get() ? m_cPrefix.Get() : TM(""),
                 l_dwYear, 
                 l_dwMonth,
                 l_dwDay,
