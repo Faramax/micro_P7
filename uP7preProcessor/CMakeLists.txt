@@ -35,6 +35,12 @@ add_executable(${PROJECT_NAME}
                uP7preFunction.cpp           uP7preFunction.h
               )
 
+# Statically linked, including glibc, so the executable runs on any x86-64 Linux regardless of its
+# glibc version. GCC does not combine -static with AddressSanitizer.
+if(NOT ASAN)
+    target_link_options(${PROJECT_NAME} PRIVATE -static)
+endif()
+
 set_ide_folder(${PROJECT_NAME})
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
